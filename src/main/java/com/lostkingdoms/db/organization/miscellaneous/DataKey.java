@@ -1,11 +1,12 @@
-package com.lostkingdoms.db;
+package com.lostkingdoms.db.organization.miscellaneous;
 
 import java.util.UUID;
 
+import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
 import com.lostkingdoms.db.sync.HashSlotCalculator;
 
 /**
- * Class that calculates the key of a {@link OrganizedDataObject} for redis
+ * Class that calculates the key of a {@link OrganizedSingleDataObject} for redis
  * and MongoDB.
  * Also contains the redis hashslot of the key and the identifier of the organized
  * Entity or Object.

@@ -1,4 +1,4 @@
-package com.lostkingdoms.db.jedis;
+package com.lostkingdoms.db.database;
 
 import java.net.UnknownHostException;
 
@@ -55,4 +55,13 @@ public class MongoDBFactory {
 		return getMongoClient().getDB(DATABASE_NAME);
 	}
 	
+	 /**
+     * Get the instance of this factory
+     * 
+     * @return The instance
+     */
+	public static MongoDBFactory getInstance() {
+		if(instance == null) instance = new MongoDBFactory();
+		return instance;
+	}
 }

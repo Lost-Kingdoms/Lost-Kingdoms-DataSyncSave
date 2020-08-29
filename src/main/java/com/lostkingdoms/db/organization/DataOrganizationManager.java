@@ -1,7 +1,8 @@
-package com.lostkingdoms.db;
+package com.lostkingdoms.db.organization;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.lostkingdoms.db.converters.IDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
@@ -21,7 +22,7 @@ public class DataOrganizationManager {
 	/**
 	 * Name of the redis syncing channel
 	 */
-	private static final String SYNC_MESSAGE_CHANNEL = "LostKingdoms_Sync";
+	public static final String SYNC_MESSAGE_CHANNEL = "LostKingdoms_Sync";
 	
 	/**
 	 * Array of timestamps for all hashslots
@@ -33,7 +34,10 @@ public class DataOrganizationManager {
 	 */
 	private List<IDataConverter> converters;
 	
-	
+	/**
+	 * The UUID that identifies this cache instance
+	 */
+	private UUID instanceID;
 	
 	/**
 	 * Constructor of the {@link DataOrganizationManager}
@@ -85,5 +89,14 @@ public class DataOrganizationManager {
 		//No converter for this class was found
 		
 		return new DefaultDataConverter();
+	}
+	
+	/**
+	 * Get this instances ID
+	 * 
+	 * @return
+	 */
+	public UUID getInstanceID() {
+		return this.instanceID;
 	}
 }

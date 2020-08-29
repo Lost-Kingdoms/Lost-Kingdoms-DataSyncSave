@@ -6,15 +6,23 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.UUID;
 
+import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.exceptions.IllegalIdentifierClassException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedEntityKeyException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedObjectKeyException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedObjectTypeException;
-import com.lostkingdoms.db.jedis.JedisFactory;
+import com.lostkingdoms.db.organization.enums.Identifier;
+import com.lostkingdoms.db.organization.enums.OrganizationType;
+import com.lostkingdoms.db.organization.enums.OrganizedEntity;
+import com.lostkingdoms.db.organization.enums.OrganizedObject;
+import com.lostkingdoms.db.organization.miscellaneous.DataKey;
+import com.lostkingdoms.db.organization.objects.ImmutableOrganizedDataObject;
+import com.lostkingdoms.db.organization.objects.MutableOrganizedDataObject;
+import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
 
 import redis.clients.jedis.Jedis;
 
-public class DataAccessObject {
+public class DataAccessManager {
 	
 	public static Object getOrganizedEntity(Class<?> clazz, UUID identifier) {
 		return buildOrganizedEntity(clazz, identifier, OrganizedDataType.MUTABLE);
@@ -28,7 +36,7 @@ public class DataAccessObject {
 		
 	}
 	
-	public static OrganizedDataObject<?> getAllOrganizedEntities(Class<?> clazz, OrganizedDataType organizedDataType) {
+	public static OrganizedSingleDataObject<?> getAllOrganizedEntities(Class<?> clazz, OrganizedDataType organizedDataType) {
 		
 	}
 	
@@ -36,15 +44,15 @@ public class DataAccessObject {
 		
 	}
 	
-	public static OrganizedDataObject<?> getOrganizedDataObject(Class<?> clazz, String fieldKey, OrganizedDataType organizedDataType) {
+	public static OrganizedSingleDataObject<?> getOrganizedDataObject(Class<?> clazz, String fieldKey, OrganizedDataType organizedDataType) {
 		
 	}
 	
-	public static void save(OrganizedDataObject<?> dataObject) {
+	public static void save(OrganizedSingleDataObject<?> dataObject) {
 		
 	}
 	
-	public static void remove(OrganizedDataObject<?> dataObject) {
+	public static void remove(OrganizedSingleDataObject<?> dataObject) {
 		
 	}
 	

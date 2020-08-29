@@ -1,4 +1,4 @@
-package com.lostkingdoms.db.jedis;
+package com.lostkingdoms.db.database;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -54,7 +54,7 @@ public class JedisFactory {
     /**
      * Get the instance of this factory
      * 
-     * @return the instance
+     * @return The instance
      */
     public static JedisFactory getInstance() {
         if (instance == null) instance = new JedisFactory();        
