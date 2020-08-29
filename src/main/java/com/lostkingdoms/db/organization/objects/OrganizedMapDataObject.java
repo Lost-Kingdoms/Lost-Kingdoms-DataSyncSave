@@ -8,6 +8,7 @@ import java.util.Map;
 import org.bson.types.ObjectId;
 
 import com.lostkingdoms.db.converters.IDataConverter;
+import com.lostkingdoms.db.converters.impl.MapDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
 import com.lostkingdoms.db.organization.DataOrganizationManager;
@@ -37,6 +38,7 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 	 */
 	public OrganizedMapDataObject(DataKey dataKey, OrganizationType organizationType) {
 		setDataKey(dataKey);
+		setDataConverter(new MapDataConverter<K, V>());
 		setOrganizationType(organizationType);
 		setData(new HashMap<K, V>());
 	}

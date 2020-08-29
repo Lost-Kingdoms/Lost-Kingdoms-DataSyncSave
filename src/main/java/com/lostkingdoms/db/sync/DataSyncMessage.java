@@ -72,4 +72,22 @@ public class DataSyncMessage {
 		return new DataSyncMessage(senderInstanceID, keyHashSlot);
 	}
 	
+	/**
+	 * Get the sender instance ID
+	 * 
+	 * @return
+	 */
+	public UUID getSenderInstanceID() {
+		return this.senderInstanceID;
+	}
+	
+	/**
+	 * Get the updated hashslot
+	 * 
+	 * @return
+	 */
+	public short getHashSlot() {
+		return this.keyHashSlot;
+	}
+	
 }

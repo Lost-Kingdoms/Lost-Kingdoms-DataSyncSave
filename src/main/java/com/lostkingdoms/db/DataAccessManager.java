@@ -3,10 +3,12 @@ package com.lostkingdoms.db;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.exceptions.IllegalIdentifierClassException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedEntityKeyException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedObjectKeyException;
@@ -16,44 +18,111 @@ import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.enums.OrganizedEntity;
 import com.lostkingdoms.db.organization.enums.OrganizedObject;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
-import com.lostkingdoms.db.organization.objects.ImmutableOrganizedDataObject;
-import com.lostkingdoms.db.organization.objects.MutableOrganizedDataObject;
+import com.lostkingdoms.db.organization.objects.OrganizedListDataObject;
+import com.lostkingdoms.db.organization.objects.OrganizedMapDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
 
-import redis.clients.jedis.Jedis;
-
+/**
+ * Manager that handles the creation, destruction and query of all organized data types and entities
+ * 
+ * @author Tim
+ *
+ */
 public class DataAccessManager {
 	
-	public static Object getOrganizedEntity(Class<?> clazz, UUID identifier) {
-		return buildOrganizedEntity(clazz, identifier, OrganizedDataType.MUTABLE);
+	/**
+	 * The singletons instance
+	 */
+	public static DataAccessManager instance;
+	
+	/**
+	 * A map containing all created entities mapped by it's class
+	 */
+	Map<Class<?>, Map<UUID, Object>> managedEntities;
+	
+	private DataAccessManager() {
+		managedEntities = new HashMap<Class<?>, Map<UUID,Object>>();
 	}
 	
-	public static Object getOrganizedEntity(Class<?> clazz, UUID identifier,  OrganizedDataType organizedDataType) {
-		return buildOrganizedEntity(clazz, identifier, organizedDataType);
+	/**
+	 * Get the instance of this manager
+	 * 
+	 * @return The instance
+	 */
+	public static DataAccessManager getInstance() {
+		if(instance == null) instance = new DataAccessManager();
+		return instance;
 	}
 	
-	public static MutableOrganizedDataObject<?> getAllOrganizedEntites(Class<?> clazz) {
+	/**
+	 * Check if a entity is locally cached
+	 * 
+	 * @param clazz
+	 * @param identifier
+	 * @return true if the entity is locally cached
+	 */
+	public boolean isCached(Class<?> clazz, UUID identifier) {
+		if(managedEntities.containsKey(clazz)) {
+			if(managedEntities.get(clazz).containsKey(identifier)) return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Get a managed entity by it's class and uuid.
+	 * 
+	 * @param clazz
+	 * @param id
+	 */
+	public Object getEntity(Class<?> clazz, UUID identifier) {
+		//Check if clazz is OrganizedEntity
+		if(clazz.getAnnotation(OrganizedEntity.class) == null) {
+			return null;
+		}
 		
+		//Check if this entity already exists an return it if so
+		if(managedEntities.containsKey(clazz)) {
+			if(managedEntities.get(clazz).containsKey(identifier)) {
+				return managedEntities.get(clazz).get(identifier);
+			}
+		} 
+		
+		//Object does not exist -> Create it
+		Object orgEntity = buildOrganizedEntity(clazz, identifier);
+		
+		if(managedEntities.containsKey(clazz)) {
+			managedEntities.get(clazz).put(identifier, orgEntity);
+		} else {
+			Map<UUID, Object> map = new HashMap<UUID, Object>();
+			map.put(identifier, orgEntity);
+			
+			managedEntities.put(clazz, map);
+		}
+	
+		return orgEntity;
 	}
 	
-	public static OrganizedSingleDataObject<?> getAllOrganizedEntities(Class<?> clazz, OrganizedDataType organizedDataType) {
-		
+	/**
+	 * Remove a managed entity from local cache
+	 * 
+	 * @param clazz
+	 * @param identifier
+	 */
+	public void removeEntity(Class<?> clazz, UUID identifier) {
+		if(managedEntities.containsKey(clazz)) {
+			managedEntities.get(clazz).remove(identifier);
+		}
 	}
 	
-	public static MutableOrganizedDataObject<?> getOrganizedDataObject(Class<?> clazz, String fieldKey) {
-		
-	}
-	
-	public static OrganizedSingleDataObject<?> getOrganizedDataObject(Class<?> clazz, String fieldKey, OrganizedDataType organizedDataType) {
-		
-	}
-	
-	public static void save(OrganizedSingleDataObject<?> dataObject) {
-		
-	}
-	
-	public static void remove(OrganizedSingleDataObject<?> dataObject) {
-		
+	/**
+	 * Get all locally cached entities by class
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public List<Object> getAllCachedEntities(Class<?> clazz) {
+		if(managedEntities.containsKey(clazz)) return (List<Object>) managedEntities.get(clazz).values();
+		return new ArrayList<Object>();
 	}
 	
 	/**
@@ -65,13 +134,12 @@ public class DataAccessManager {
 	 * @param organizedDataType
 	 * @return builded object or null if clazz is no OrganizedEntity
 	 */
-	private static Object buildOrganizedEntity(Class<?> clazz, UUID identifier, OrganizedDataType organizedDataType) {
+	private Object buildOrganizedEntity(Class<?> clazz, UUID identifier) {
 		// Check if requested class is OrganizedEntity
 		
 		if(clazz.getAnnotation(OrganizedEntity.class) == null) return null;
 		
 		// Build object with reflection
-		
 		try {
 			Constructor<?> constr = clazz.getConstructor(UUID.class);
 
@@ -88,23 +156,21 @@ public class DataAccessManager {
 						if(objAnn.organizationType() == null) throw new MissingOrganizedObjectTypeException(clazz.getSimpleName() + "." + field.getName());
 						OrganizationType orgType = objAnn.organizationType();
 						
-						if(organizedDataType == OrganizedDataType.MUTABLE) {
-							Constructor<?> fConstr = MutableOrganizedDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
-							
-							MutableOrganizedDataObject<?> orgObj = (MutableOrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType);
-							field.setAccessible(true);
-							field.set(obj, orgObj);
-							field.setAccessible(false);
+						Constructor<?> fConstr = null;
+						if(field.getType() == OrganizedSingleDataObject.class) {
+							fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
 						}
-						if(organizedDataType == OrganizedDataType.IMMUTABLE) {
-							Constructor<?> fConstr = ImmutableOrganizedDataObject.class.getConstructor(DataKey.class);
-							
-							ImmutableOrganizedDataObject<?> orgObj = (ImmutableOrganizedDataObject<?>) fConstr.newInstance(dataKey);
-							field.setAccessible(true);
-							field.set(obj, orgObj);
-							field.setAccessible(false);
+						if(field.getType() == OrganizedListDataObject.class) {
+							fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
 						}
-						
+						if(field.getType() == OrganizedMapDataObject.class) {
+							fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
+						}	
+
+						Object orgObj = fConstr.newInstance(dataKey, orgType);
+						field.setAccessible(true);
+						field.set(obj, orgObj);
+						field.setAccessible(false);
 					} else {
 						if(entAnn.key() == null) {
 							throw new MissingOrganizedEntityKeyException(clazz.getSimpleName());

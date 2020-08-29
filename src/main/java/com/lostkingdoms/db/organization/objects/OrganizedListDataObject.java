@@ -7,6 +7,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 
 import com.lostkingdoms.db.converters.IDataConverter;
+import com.lostkingdoms.db.converters.impl.ListDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
 import com.lostkingdoms.db.organization.DataOrganizationManager;
@@ -31,6 +32,7 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 	 */
 	public OrganizedListDataObject(DataKey dataKey, OrganizationType organizationType) {
 		setDataKey(dataKey);
+		setDataConverter(new ListDataConverter<T>());
 		setOrganizationType(organizationType);
 		setData(new ArrayList<T>());
 	}

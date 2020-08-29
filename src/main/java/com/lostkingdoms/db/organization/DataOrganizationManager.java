@@ -1,11 +1,19 @@
 package com.lostkingdoms.db.organization;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.lostkingdoms.db.converters.IDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
+import com.lostkingdoms.db.database.JedisFactory;
+import com.lostkingdoms.db.sync.DataSyncListener;
+
+import redis.clients.jedis.Jedis;
 
 public class DataOrganizationManager {
 
@@ -27,12 +35,12 @@ public class DataOrganizationManager {
 	/**
 	 * Array of timestamps for all hashslots
 	 */
-	private long[] lastUpdated = new long[HASH_SLOT_COUNT];
+	private long[] lastUpdated;
 	
 	/**
 	 * The list of all registered converters
 	 */
-	private List<IDataConverter> converters;
+	private Map<Class<?>, IDataConverter<?>> converters;
 	
 	/**
 	 * The UUID that identifies this cache instance
@@ -43,7 +51,18 @@ public class DataOrganizationManager {
 	 * Constructor of the {@link DataOrganizationManager}
 	 */
 	public DataOrganizationManager() {
-		converters = new ArrayList<IDataConverter>();	
+		Jedis jedis = JedisFactory.getInstance().getJedis();
+		
+		try {
+			converters = new HashMap<Class<?>, IDataConverter<?>>();
+			instanceID = UUID.randomUUID();
+			lastUpdated = new long[HASH_SLOT_COUNT];
+			
+			jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
+		} finally {
+			jedis.close();
+		}
+		
 	}
 	
 	/**
@@ -54,6 +73,10 @@ public class DataOrganizationManager {
 	public static DataOrganizationManager getInstance() {
 		if(instance == null) instance = new DataOrganizationManager();
 		return instance;
+	}
+	
+	public void invalidateHashSlot(short slot) {
+		lastUpdated[slot] = System.currentTimeMillis();
 	}
 	
 	/**
@@ -71,8 +94,8 @@ public class DataOrganizationManager {
 	 * 
 	 * @param dataConverter
 	 */
-	public void registerDataConverter(IDataConverter dataConverter) {
-		converters.add(dataConverter);
+	public void registerDataConverter(Class<?> clazz, IDataConverter<?> dataConverter) {
+		converters.put(clazz, dataConverter);
 	}
 	
 	/**
@@ -81,13 +104,11 @@ public class DataOrganizationManager {
 	 * @param clazz
 	 * @return the suitable converter or {@link DefaultDataConverter}
 	 */
-	public IDataConverter getDataConverter(Class<?> clazz) {
-		for(IDataConverter dataConverter : converters) {
-			//TODO
-		}
+	public IDataConverter<?> getDataConverter(Class<?> clazz) {
+		if(converters.get(clazz) != null) 
+			return converters.get(clazz);
 		
-		//No converter for this class was found
-		
+		//No converter for this class was found	
 		return new DefaultDataConverter();
 	}
 	

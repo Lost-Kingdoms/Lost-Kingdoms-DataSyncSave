@@ -31,8 +31,9 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	 * @param dataKey The objects {@link DataKey}
 	 * @param organizationType The objects {@link OrganizationType}
 	 */
-	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType) {
+	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType, IDataConverter<T> converter) {
 		setDataKey(dataKey);
+		setDataConverter(converter);
 		setOrganizationType(organizationType);
 	}
 	
