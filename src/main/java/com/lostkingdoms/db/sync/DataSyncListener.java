@@ -1,6 +1,6 @@
 package com.lostkingdoms.db.sync;
 
-import com.lostkingdoms.db.organization.DataOrganizationManager;
+import com.lostkingdoms.db.DataOrganizationManager;
 
 import redis.clients.jedis.JedisPubSub;
 

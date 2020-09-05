@@ -145,7 +145,7 @@ public final class DataAccessManager {
 	 * @param organizedDataType
 	 * @return builded object or null if clazz is no {@link com.lostkingdoms.db.organization.OrganizedEntity}
 	 */
-	private com.lostkingdoms.db.organization.OrganizedEntity buildOrganizedEntity(Class<?> clazz, UUID identifier) {
+	private OrganizedEntity buildOrganizedEntity(Class<?> clazz, UUID identifier) {
 		// Check if requested class is OrganizedEntity
 		if(clazz.getAnnotation(com.lostkingdoms.db.organization.annotations.OrganizedEntity.class) == null) return null;
 		
@@ -176,16 +176,16 @@ public final class DataAccessManager {
 						if(field.getType() == OrganizedMapDataObject.class) {
 							fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
 						}	
-
+						
 						DefaultDataConverter<?> conv = null; 
 						
-						if(objAnn.listType() == null && objAnn.mapType() == null) {
+						if(objAnn.listType() == Object.class && objAnn.mapType() == Object.class) {
 							conv = new DefaultDataConverter<>(objAnn.genericClass());
 						} else
-						if(objAnn.listType() != null) {
+						if(objAnn.listType() != Object.class) {
 							conv = new DefaultDataConverter<>(objAnn.genericClass(), objAnn.listType());
 						} else 
-						if(objAnn.mapType() != null) {
+						if(objAnn.mapType() != Object.class) {
 							conv = new DefaultDataConverter<>(objAnn.genericClass(), objAnn.listType(), objAnn.mapType());
 						}
 						

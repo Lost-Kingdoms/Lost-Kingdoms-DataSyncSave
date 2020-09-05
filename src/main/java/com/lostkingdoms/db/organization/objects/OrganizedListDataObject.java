@@ -6,11 +6,11 @@ import java.util.List;
 
 import org.bson.types.ObjectId;
 
+import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
-import com.lostkingdoms.db.organization.DataOrganizationManager;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 import com.lostkingdoms.db.sync.DataSyncMessage;

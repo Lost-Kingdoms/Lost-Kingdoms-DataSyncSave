@@ -1,4 +1,4 @@
-package com.lostkingdoms.db.organization;
+package com.lostkingdoms.db;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +8,7 @@ import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.converters.impl.OrganizedObjectConverter;
 import com.lostkingdoms.db.database.JedisFactory;
+import com.lostkingdoms.db.organization.OrganizedEntity;
 import com.lostkingdoms.db.sync.DataSyncListener;
 
 import redis.clients.jedis.Jedis;
