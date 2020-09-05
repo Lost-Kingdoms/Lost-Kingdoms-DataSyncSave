@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.bson.types.ObjectId;
 
-import com.lostkingdoms.db.converters.IDataConverter;
-import com.lostkingdoms.db.converters.impl.ListDataConverter;
+import com.lostkingdoms.db.converters.AbstractDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
 import com.lostkingdoms.db.organization.DataOrganizationManager;
@@ -30,9 +30,9 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 	 * @param dataKey The objects {@link DataKey}
 	 * @param organizationType The objects {@link OrganizationType}
 	 */
-	public OrganizedListDataObject(DataKey dataKey, OrganizationType organizationType) {
+	public OrganizedListDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<ArrayList<T>> converter) {
 		setDataKey(dataKey);
-		setDataConverter(new ListDataConverter<T>());
+		setDataConverter(converter);
 		setOrganizationType(organizationType);
 		setData(new ArrayList<T>());
 	}
@@ -63,10 +63,10 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 			// Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				IDataConverter<ArrayList<T>> converter = getDataConverter();
+				AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
 
 				//Convert the data
-				ArrayList<T> newData = converter.convertFromRedis(dataString);
+				ArrayList<T> newData = converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -96,10 +96,10 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 			//Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				IDataConverter<ArrayList<T>> converter = getDataConverter();
+				AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
 
 				//Convert the data
-				ArrayList<T> newData = converter.convertFromMongoDB(dataString);
+				ArrayList<T> newData = converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -113,7 +113,7 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 				updateTimestamp(newTimestamp);
 
 				//Push data to Redis
-				jedis.set(dataKey.getRedisKey(), converter.convertToRedis(getData()));
+				jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
 
 				return Collections.unmodifiableList(getData());
 			}
@@ -155,20 +155,19 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			IDataConverter<ArrayList<T>> converter = getDataConverter();
+			AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
 			
 			//Conversion to redis and mongoDB
-			String redisDataString = converter.convertToRedis(temp);
-			String mongoDataString = converter.convertToMongoDB(temp);
-			if(redisDataString == null || mongoDataString == null) {
+			String dataString = converter.convertToDatabase(temp);
+			if(dataString == null) {
 				return;
 			}
 			
 			//Update to redis
-			if(redisDataString.equals("")) {
+			if(dataString.equals("")) {
 				jedis.del(dataKey.getRedisKey());
 			} else {
-				jedis.set(dataKey.getRedisKey(), redisDataString);
+				jedis.set(dataKey.getRedisKey(), dataString);
 			}
 			
 			//Update to MongoDB
@@ -179,7 +178,7 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 				BasicDBObject newDoc = new BasicDBObject();
-				newDoc.put(dataKey.getMongoDBValue(), mongoDataString);
+				newDoc.put(dataKey.getMongoDBValue(), dataString);
 				
 				BasicDBObject update = new BasicDBObject();
 				update.put("$set", newDoc);
@@ -230,20 +229,19 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 				DataKey dataKey = getDataKey();
 				
 				//Get the data converter
-				IDataConverter<ArrayList<T>> converter = getDataConverter();
+				AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
 				
 				//Conversion to redis and mongoDB
-				String redisDataString = converter.convertToRedis(temp);
-				String mongoDataString = converter.convertToMongoDB(temp);
-				if(redisDataString == null || mongoDataString == null) {
+				String dataString = converter.convertToDatabase(temp);
+				if(dataString == null) {
 					return;
 				}
 				
 				//Update to redis
-				if(redisDataString.equals("")) {
+				if(dataString.equals("")) {
 					jedis.del(dataKey.getRedisKey());
 				} else {
-					jedis.set(dataKey.getRedisKey(), redisDataString);
+					jedis.set(dataKey.getRedisKey(), dataString);
 				}
 				
 				//Update to MongoDB
@@ -254,7 +252,7 @@ public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>
 					query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 					BasicDBObject newDoc = new BasicDBObject();
-					newDoc.put(dataKey.getMongoDBValue(), mongoDataString);
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
 					
 					BasicDBObject update = new BasicDBObject();
 					update.put("$set", newDoc);

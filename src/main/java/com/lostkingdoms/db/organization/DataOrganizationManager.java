@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.lostkingdoms.db.converters.IDataConverter;
+import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
+import com.lostkingdoms.db.converters.impl.OrganizedObjectConverter;
 import com.lostkingdoms.db.database.JedisFactory;
+import com.lostkingdoms.db.organization.objects.OrganizedEntity;
 import com.lostkingdoms.db.sync.DataSyncListener;
 
 import redis.clients.jedis.Jedis;
@@ -40,7 +42,7 @@ public class DataOrganizationManager {
 	/**
 	 * The list of all registered converters
 	 */
-	private Map<Class<?>, IDataConverter<?>> converters;
+	private Map<Class<?>, AbstractDataConverter<?>> converters;
 	
 	/**
 	 * The UUID that identifies this cache instance
@@ -54,7 +56,7 @@ public class DataOrganizationManager {
 		Jedis jedis = JedisFactory.getInstance().getJedis();
 		
 		try {
-			converters = new HashMap<Class<?>, IDataConverter<?>>();
+			converters = new HashMap<Class<?>, AbstractDataConverter<?>>();
 			instanceID = UUID.randomUUID();
 			lastUpdated = new long[HASH_SLOT_COUNT];
 			
@@ -83,10 +85,21 @@ public class DataOrganizationManager {
 	 * Get the timestamp when a hashslot was last updated
 	 * 
 	 * @param hashslot
-	 * @return last update timestamp
+	 * @return Last update timestamp
 	 */
 	public long getLastUpdated(int hashslot) {
 		return lastUpdated[hashslot];
+	}
+	
+	/**
+	 * Register a {@link OrganizedEntity} and it's corresponding {@link OrganizedObjectConverter}
+	 * 
+	 * @param clazz
+	 * @param converter
+	 */
+	public void registerOrganizedEntity(Class<? extends OrganizedEntity> clazz, 
+			OrganizedObjectConverter<OrganizedEntity> converter) {
+		registerDataConverter(clazz, converter);
 	}
 	
 	/**
@@ -94,8 +107,8 @@ public class DataOrganizationManager {
 	 * 
 	 * @param dataConverter
 	 */
-	public void registerDataConverter(Class<?> clazz, IDataConverter<?> dataConverter) {
-		converters.put(clazz, dataConverter);
+	public void registerDataConverter(Class<?> clazz, AbstractDataConverter<?> converter) {
+		converters.put(clazz, converter);
 	}
 	
 	/**
@@ -104,12 +117,22 @@ public class DataOrganizationManager {
 	 * @param clazz
 	 * @return the suitable converter or {@link DefaultDataConverter}
 	 */
-	public IDataConverter<?> getDataConverter(Class<?> clazz) {
+	public AbstractDataConverter<?> getDataConverter(Class<?> clazz) {
 		if(converters.get(clazz) != null) 
 			return converters.get(clazz);
 		
-		//No converter for this class was found	
-		return new DefaultDataConverter();
+		return null;
+	}
+	
+	/**
+	 * Check if there exists a converter for a class
+	 * 
+	 * @param clazz
+	 * @return True, if converter exists
+	 */
+	public boolean hasDataConverter(Class<?> clazz) {
+		if(converters.containsKey(clazz)) return true;
+		return false;
 	}
 	
 	/**

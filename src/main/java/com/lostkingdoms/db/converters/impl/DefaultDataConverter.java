@@ -1,172 +1,116 @@
 package com.lostkingdoms.db.converters.impl;
 
-import java.lang.reflect.Field;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-import com.lostkingdoms.db.converters.IDataConverter;
-import com.lostkingdoms.db.organization.enums.Identifier;
-import com.lostkingdoms.db.organization.enums.OrganizedEntity;
+import com.google.gson.Gson;
+import com.lostkingdoms.db.converters.AbstractDataConverter;
+import com.lostkingdoms.db.organization.DataOrganizationManager;
 
-public class DefaultDataConverter implements IDataConverter {
+/**
+ * The default data converter.
+ * 
+ * @author Tim
+ *
+ * @param <T>
+ */
+public class DefaultDataConverter<T> extends AbstractDataConverter<T> {
 
+	public DefaultDataConverter(Class<T> thisClass) {
+		super(thisClass);
+	}
+
+	@SuppressWarnings("unchecked")
 	@Override
-	public String convertToRedis(Object data) {
-		Class<?> clazz = data.getClass();
-		
-		if(clazz == int.class) {
-			return String.valueOf((int)data);
+	public T convertFromDatabase(String s) {
+		//The Gson instance
+		Gson gson = new Gson();
+
+		//Check if there is a converter assigned for class T
+		DataOrganizationManager dataOrganizationManager = DataOrganizationManager.getInstance();
+		if(dataOrganizationManager.hasDataConverter(getThisClass())) {
+			return ((AbstractDataConverter<T>)dataOrganizationManager.getDataConverter(getThisClass())).convertFromDatabase(s);
 		}
-		if(clazz == Integer.class) {
-			return ((Integer)data).toString();
+
+		//TODO if List or map contains OrganizedObjects
+
+		return gson.fromJson(s, getThisClass());
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public String convertToDatabase(Object t) {
+		//Check if given object t is  the correct class for this converter
+		if(!getThisClass().isInstance(t)) return null;
+
+		Object data = t;
+
+		//The Gson instance
+		Gson gson = new Gson();
+
+		//Check if there is a converter assigned for class T
+		DataOrganizationManager dataOrganizationManager = DataOrganizationManager.getInstance();
+		if(dataOrganizationManager.hasDataConverter(t.getClass())) {
+			data = ((AbstractDataConverter<T>)dataOrganizationManager.getDataConverter(t.getClass())).convertToDatabase(t);
 		}
-		if(clazz == double.class) {
-			return String.valueOf((double)data);
-		}
-		if(clazz == Double.class) {
-			return ((Double)data).toString();
-		}
-		if(clazz == long.class) {
-			return String.valueOf((long)data);
-		}
-		if(clazz == Long.class) {
-			return ((Long)data).toString();
-		}
-		if(clazz == short.class) {
-			return String.valueOf((short)data);
-		}
-		if(clazz == Short.class) {
-			return ((Short)data).toString();
-		}
-		if(clazz == byte.class) {
-			return String.valueOf((byte)data);
-		}
-		if(clazz == Byte.class) {
-			return ((Byte)data).toString();
-		}
-		if(clazz == boolean.class) {
-			return String.valueOf((boolean)data);
-		}
-		if(clazz == Boolean.class) {
-			return ((Boolean)data).toString();
-		}
-		if(clazz == float.class) {
-			return String.valueOf((float)data);
-		}
-		if(clazz == Float.class) {
-			return ((Float)data).toString();
-		}
-		if(clazz == char.class) {
-			return String.valueOf((char)data);
-		}
-		if(clazz == Character.class) {
-			return ((Character)data).toString();
-		}
-		if(clazz == String.class) {
-			return (String) data;
-		}
-		if(clazz.getAnnotation(OrganizedEntity.class) != null) {
-			for(Field f : data.getClass().getDeclaredFields()) {
-				if(f.getAnnotation(Identifier.class) != null) {
-					f.setAccessible(true);
-					UUID uuid = null;
-					try {
-						uuid = ((UUID)f.get(data));
-					} catch (IllegalArgumentException | IllegalAccessException e) {
-						e.printStackTrace();
-					}
-					f.setAccessible(false);
-					return uuid.toString();
+
+		//Data is a list
+		//If Objects in List have a registered converter, convert them with this converter
+		//Otherwise do nothing
+		if(data instanceof List<?>) {
+			//Check if list elements have registered converter
+			if(dataOrganizationManager.hasDataConverter(((List<?>)data).get(0).getClass())) {
+				List<String> newList = new ArrayList<String>();
+
+				AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(((List<?>)data).get(0).getClass());
+				//Convert list elements one by one and add them to a new list
+				for(Object o : ((List<?>)data)) {
+					newList.add(converter.convertToDatabase(o));
 				}
+
+				data = newList;
 			}
 		}
-		
-		return null;
-	}
 
-	@Override
-	public Object convertFromRedis(Class<?> clazz, String s) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String convertToMongoDB(Object data) {
-		Class<?> clazz = data.getClass();
-		
-		if(clazz == int.class) {
-			return String.valueOf((int)data);
-		}
-		if(clazz == Integer.class) {
-			return ((Integer)data).toString();
-		}
-		if(clazz == double.class) {
-			return String.valueOf((double)data);
-		}
-		if(clazz == Double.class) {
-			return ((Double)data).toString();
-		}
-		if(clazz == long.class) {
-			return String.valueOf((long)data);
-		}
-		if(clazz == Long.class) {
-			return ((Long)data).toString();
-		}
-		if(clazz == short.class) {
-			return String.valueOf((short)data);
-		}
-		if(clazz == Short.class) {
-			return ((Short)data).toString();
-		}
-		if(clazz == byte.class) {
-			return String.valueOf((byte)data);
-		}
-		if(clazz == Byte.class) {
-			return ((Byte)data).toString();
-		}
-		if(clazz == boolean.class) {
-			return String.valueOf((boolean)data);
-		}
-		if(clazz == Boolean.class) {
-			return ((Boolean)data).toString();
-		}
-		if(clazz == float.class) {
-			return String.valueOf((float)data);
-		}
-		if(clazz == Float.class) {
-			return ((Float)data).toString();
-		}
-		if(clazz == char.class) {
-			return String.valueOf((char)data);
-		}
-		if(clazz == Character.class) {
-			return ((Character)data).toString();
-		}
-		if(clazz == String.class) {
-			return (String) data;
-		}
-		if(clazz.getAnnotation(OrganizedEntity.class) != null) {
-			for(Field f : data.getClass().getDeclaredFields()) {
-				if(f.getAnnotation(Identifier.class) != null) {
-					f.setAccessible(true);
-					UUID uuid = null;
-					try {
-						uuid = ((UUID)f.get(data));
-					} catch (IllegalArgumentException | IllegalAccessException e) {
-						e.printStackTrace();
-					}
-					f.setAccessible(false);
-					return uuid.toString();
+		//Data is map
+		//If Objects in Map are OrganizedEntities convert them to it's identifier 
+		//Otherwise do nothing
+		if(data instanceof Map<?, ?>) {
+			Map<String, String> newMap = new HashMap<String, String>();
+			
+			//Check every map element one by one and convert it
+			for(Entry<?, ?> entry : ((Map<?, ?>)data).entrySet()) {
+				if(dataOrganizationManager.hasDataConverter(entry.getKey().getClass())
+						&& dataOrganizationManager.hasDataConverter(entry.getValue().getClass())) {
+					newMap.put(dataOrganizationManager.getDataConverter(entry.getKey().getClass()).convertToDatabase(entry.getKey())
+							, dataOrganizationManager.getDataConverter(entry.getValue().getClass()).convertToDatabase(entry.getValue()));
+				} else
+				if(dataOrganizationManager.hasDataConverter(entry.getKey().getClass())) {
+					newMap.put(dataOrganizationManager.getDataConverter(entry.getKey().getClass()).convertToDatabase(entry.getKey())
+							, gson.toJson(entry.getValue()));
+				} else
+				if(dataOrganizationManager.hasDataConverter(entry.getValue().getClass())) {
+					newMap.put(gson.toJson(entry.getKey())
+							, dataOrganizationManager.getDataConverter(entry.getValue().getClass()).convertToDatabase(entry.getValue()));
+				} else {
+					break;
 				}
 			}
+
+			if(newMap.size() > 0) data = newMap;
+
 		}
 		
-		return null;
+		return gson.toJson(data);
 	}
 
-	@Override
-	public Object convertFromMongoDB(String s) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	//	private <S> Type getType(Class<S> type) {
+	//        Type typeOfObjectsListNew = new TypeToken<ArrayList<S>>() {}.getType();
+	//        return typeOfObjectsListNew;
+	//    }
 
 }

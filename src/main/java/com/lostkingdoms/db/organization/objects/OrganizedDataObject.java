@@ -1,6 +1,6 @@
 package com.lostkingdoms.db.organization.objects;
 
-import com.lostkingdoms.db.converters.IDataConverter;
+import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 
@@ -23,10 +23,10 @@ public abstract class OrganizedDataObject<T> {
 	private OrganizationType organizationType;
 	
 	/**
-	 * The {@link IDataConverter} that will be used for serialization and
+	 * The {@link AbstractDataConverter} that will be used for serialization and
 	 * deserialization.
 	 */
-	private IDataConverter<T> converter;
+	private AbstractDataConverter<T> converter;
 	
 	/**
 	 * THE data map object 
@@ -95,7 +95,7 @@ public abstract class OrganizedDataObject<T> {
 	 * 
 	 * @param converter
 	 */
-	protected void setDataConverter(IDataConverter<T> converter) {
+	protected void setDataConverter(AbstractDataConverter<T> converter) {
 		if(this.converter != null) this.converter = converter;
 	}
 	
@@ -104,7 +104,7 @@ public abstract class OrganizedDataObject<T> {
 	 * 
 	 * @return The converter
 	 */
-	protected IDataConverter<T> getDataConverter() {
+	protected AbstractDataConverter<T> getDataConverter() {
 		return this.converter;
 	}
 	

@@ -2,7 +2,8 @@ package com.lostkingdoms.db.organization.objects;
 
 import org.bson.types.ObjectId;
 
-import com.lostkingdoms.db.converters.IDataConverter;
+import com.lostkingdoms.db.converters.AbstractDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
 import com.lostkingdoms.db.organization.DataOrganizationManager;
@@ -31,7 +32,7 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	 * @param dataKey The objects {@link DataKey}
 	 * @param organizationType The objects {@link OrganizationType}
 	 */
-	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType, IDataConverter<T> converter) {
+	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<T> converter) {
 		setDataKey(dataKey);
 		setDataConverter(converter);
 		setOrganizationType(organizationType);
@@ -64,10 +65,11 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			// Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				IDataConverter<T> converter = getDataConverter();
+				AbstractDataConverter<T> converter = getDataConverter();
 				
 				//Convert the data
-				T newData = converter.convertFromRedis(dataString);
+				@SuppressWarnings("unchecked")
+				T newData = (T) converter.convertFromDatabase(dataString);
 				
 				//Conversion failed
 				if(newData == null) {
@@ -97,10 +99,11 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			//Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				IDataConverter<T> converter = getDataConverter();
+				AbstractDataConverter<T> converter = getDataConverter();
 				
 				//Convert the data
-				T newData = converter.convertFromMongoDB(dataString);
+				@SuppressWarnings("unchecked")
+				T newData = (T) converter.convertFromDatabase(dataString);
 				
 				//Conversion failed
 				if(newData == null) {
@@ -114,7 +117,7 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				updateTimestamp(newTimestamp);
 				
 				//Push data to Redis
-				jedis.set(dataKey.getRedisKey(), converter.convertToRedis(getData()));
+				jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
 				
 				return getData();
 			}
@@ -146,20 +149,19 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			IDataConverter<T> converter = getDataConverter();
+			AbstractDataConverter<T> converter = getDataConverter();
 			
 			//Conversion to redis and mongoDB
-			String redisDataString = converter.convertToRedis(data);
-			String mongoDataString = converter.convertToMongoDB(data);
-			if(redisDataString == null || mongoDataString == null) {
+			String dataString = converter.convertToDatabase(data);
+			if(dataString == null) {
 				return;
 			}
 
 			//Update to redis
-			if(redisDataString.equals("")) {
+			if(dataString.equals("")) {
 				jedis.del(dataKey.getRedisKey());
 			} else {
-				jedis.set(dataKey.getRedisKey(), redisDataString);
+				jedis.set(dataKey.getRedisKey(), dataString);
 			}
 			
 			//Update to MongoDB
@@ -170,7 +172,7 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 				BasicDBObject newDoc = new BasicDBObject();
-				newDoc.put(dataKey.getMongoDBValue(), mongoDataString);
+				newDoc.put(dataKey.getMongoDBValue(), dataString);
 				
 				BasicDBObject update = new BasicDBObject();
 				update.put("$set", newDoc);

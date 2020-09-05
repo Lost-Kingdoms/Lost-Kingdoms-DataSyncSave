@@ -1,14 +1,13 @@
 package com.lostkingdoms.db.organization.objects;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
 
-import com.lostkingdoms.db.converters.IDataConverter;
-import com.lostkingdoms.db.converters.impl.MapDataConverter;
+import com.lostkingdoms.db.converters.AbstractDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
 import com.lostkingdoms.db.organization.DataOrganizationManager;
@@ -36,9 +35,9 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 	 * @param dataKey The objects {@link DataKey}
 	 * @param organizationType The objects {@link OrganizationType}
 	 */
-	public OrganizedMapDataObject(DataKey dataKey, OrganizationType organizationType) {
+	public OrganizedMapDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<HashMap<K, V>> converter) {
 		setDataKey(dataKey);
-		setDataConverter(new MapDataConverter<K, V>());
+		setDataConverter(converter);
 		setOrganizationType(organizationType);
 		setData(new HashMap<K, V>());
 	}
@@ -69,10 +68,11 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 			// Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				IDataConverter<HashMap<K, V>> converter = getDataConverter();
+				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
 
 				//Convert the data
-				HashMap<K, V> newData = converter.convertFromRedis(dataString);
+				@SuppressWarnings("unchecked")
+				HashMap<K, V> newData = (HashMap<K, V>) converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -102,10 +102,11 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 			//Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				IDataConverter<HashMap<K, V>> converter = getDataConverter();
+				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
 
 				//Convert the data
-				HashMap<K, V> newData = converter.convertFromMongoDB(dataString);
+				@SuppressWarnings("unchecked")
+				HashMap<K, V> newData = (HashMap<K, V>) converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -119,7 +120,7 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 				updateTimestamp(newTimestamp);
 
 				//Push data to Redis
-				jedis.set(dataKey.getRedisKey(), converter.convertToRedis(getData()));
+				jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
 
 				return Collections.unmodifiableMap(getData());
 			}
@@ -162,20 +163,19 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			IDataConverter<HashMap<K, V>> converter = getDataConverter();
+			AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
 			
 			//Conversion to redis and mongoDB
-			String redisDataString = converter.convertToRedis(temp);
-			String mongoDataString = converter.convertToMongoDB(temp);
-			if(redisDataString == null || mongoDataString == null) {
+			String dataString = converter.convertToDatabase(temp);
+			if(dataString == null) {
 				return;
 			}
 			
 			//Update to redis
-			if(redisDataString.equals("")) {
+			if(dataString.equals("")) {
 				jedis.del(dataKey.getRedisKey());
 			} else {
-				jedis.set(dataKey.getRedisKey(), redisDataString);
+				jedis.set(dataKey.getRedisKey(), dataString);
 			}
 			
 			//Update to MongoDB
@@ -186,7 +186,7 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 				BasicDBObject newDoc = new BasicDBObject();
-				newDoc.put(dataKey.getMongoDBValue(), mongoDataString);
+				newDoc.put(dataKey.getMongoDBValue(), dataString);
 				
 				BasicDBObject update = new BasicDBObject();
 				update.put("$set", newDoc);
@@ -237,20 +237,19 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 				DataKey dataKey = getDataKey();
 				
 				//Get the data converter
-				IDataConverter<HashMap<K, V>> converter = getDataConverter();
+				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
 				
 				//Conversion to redis and mongoDB
-				String redisDataString = converter.convertToRedis(temp);
-				String mongoDataString = converter.convertToMongoDB(temp);
-				if(redisDataString == null || mongoDataString == null) {
+				String dataString = converter.convertToDatabase(temp);
+				if(dataString == null) {
 					return;
 				}
 				
 				//Update to redis
-				if(redisDataString.equals("")) {
+				if(dataString.equals("")) {
 					jedis.del(dataKey.getRedisKey());
 				} else {
-					jedis.set(dataKey.getRedisKey(), redisDataString);
+					jedis.set(dataKey.getRedisKey(), dataString);
 				}
 				
 				//Update to MongoDB
@@ -261,7 +260,7 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 					query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 					BasicDBObject newDoc = new BasicDBObject();
-					newDoc.put(dataKey.getMongoDBValue(), mongoDataString);
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
 					
 					BasicDBObject update = new BasicDBObject();
 					update.put("$set", newDoc);
