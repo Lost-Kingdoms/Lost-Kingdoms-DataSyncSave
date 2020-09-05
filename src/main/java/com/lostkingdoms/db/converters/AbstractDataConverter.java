@@ -40,4 +40,15 @@ public abstract class AbstractDataConverter<T> {
 	 */
 	public abstract String convertToDatabase(Object o);
 	
+	/**
+	 * An utility method to create generic list or map class objects
+	 * 
+	 * @param <T>
+	 * @param clazz
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> castClass(Class<?> clazz) {
+        return (Class<T>) clazz;
+    }
 }

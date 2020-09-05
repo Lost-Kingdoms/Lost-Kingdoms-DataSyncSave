@@ -5,7 +5,7 @@ import java.io.UnsupportedEncodingException;
 /**
  * Utility class to calculate a hashslot a key is in
  */
-public class HashSlotCalculator {
+public final class HashSlotCalculator {
 
 	private static final int HASH_SLOT_COUNT = 16384;
 	

@@ -21,7 +21,7 @@ import com.mongodb.DBObject;
 
 import redis.clients.jedis.Jedis;
 
-public class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>> {
+public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>> {
 
 	/**
 	 * Constructor for {@link OrganizedListDataObject}.

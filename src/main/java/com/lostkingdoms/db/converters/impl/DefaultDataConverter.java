@@ -17,7 +17,7 @@ import com.lostkingdoms.db.organization.DataOrganizationManager;
  *
  * @param <T>
  */
-public class DefaultDataConverter<T> extends AbstractDataConverter<T> {
+public final class DefaultDataConverter<T> extends AbstractDataConverter<T> {
 
 	public DefaultDataConverter(Class<T> thisClass) {
 		super(thisClass);

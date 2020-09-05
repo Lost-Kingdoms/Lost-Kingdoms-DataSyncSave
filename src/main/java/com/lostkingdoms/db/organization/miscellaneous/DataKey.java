@@ -11,7 +11,7 @@ import com.lostkingdoms.db.sync.HashSlotCalculator;
  * Also contains the redis hashslot of the key and the identifier of the organized
  * Entity or Object.
  */
-public class DataKey {
+public final class DataKey {
 
 	/**
 	 * The main key of the the data structure e.g. user

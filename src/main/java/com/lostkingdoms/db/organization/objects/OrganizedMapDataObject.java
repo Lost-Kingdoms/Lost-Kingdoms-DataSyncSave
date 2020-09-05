@@ -26,7 +26,7 @@ import redis.clients.jedis.Jedis;
  *
  * @param <K, V> the classes of the data that should be synced
  */
-public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K, V>> {
+public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K, V>> {
 
 	/**
 	 * Constructor for {@link OrganizedMapDataObject}.
@@ -71,8 +71,7 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
 
 				//Convert the data
-				@SuppressWarnings("unchecked")
-				HashMap<K, V> newData = (HashMap<K, V>) converter.convertFromDatabase(dataString);
+				HashMap<K, V> newData = converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -105,8 +104,7 @@ public class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K,
 				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
 
 				//Convert the data
-				@SuppressWarnings("unchecked")
-				HashMap<K, V> newData = (HashMap<K, V>) converter.convertFromDatabase(dataString);
+				HashMap<K, V> newData = converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {

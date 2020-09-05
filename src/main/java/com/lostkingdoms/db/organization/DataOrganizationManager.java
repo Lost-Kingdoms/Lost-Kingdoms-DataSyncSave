@@ -1,23 +1,26 @@
 package com.lostkingdoms.db.organization;
 
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.converters.impl.OrganizedObjectConverter;
 import com.lostkingdoms.db.database.JedisFactory;
-import com.lostkingdoms.db.organization.objects.OrganizedEntity;
 import com.lostkingdoms.db.sync.DataSyncListener;
 
 import redis.clients.jedis.Jedis;
 
-public class DataOrganizationManager {
+/**
+ * The core class of this API. Manages some constants, sets up synchronization on
+ * intitialisation. 
+ * Manages the registration of {@link OrganizedEntity}s and {@link AbstractDataConverter}s
+ * 
+ * @author Tim
+ *
+ */
+public final class DataOrganizationManager {
 
 	/**
 	 * The singleton instance
@@ -59,7 +62,7 @@ public class DataOrganizationManager {
 			converters = new HashMap<Class<?>, AbstractDataConverter<?>>();
 			instanceID = UUID.randomUUID();
 			lastUpdated = new long[HASH_SLOT_COUNT];
-			
+
 			jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
 		} finally {
 			jedis.close();
@@ -115,7 +118,7 @@ public class DataOrganizationManager {
 	 * Get a converter for a class
 	 * 
 	 * @param clazz
-	 * @return the suitable converter or {@link DefaultDataConverter}
+	 * @return The suitable converter or {@link DefaultDataConverter}
 	 */
 	public AbstractDataConverter<?> getDataConverter(Class<?> clazz) {
 		if(converters.get(clazz) != null) 

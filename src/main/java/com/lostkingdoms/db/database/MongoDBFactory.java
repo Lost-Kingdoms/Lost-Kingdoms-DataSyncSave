@@ -5,7 +5,10 @@ import java.net.UnknownHostException;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 
-public class MongoDBFactory {
+/**
+ * Provider class for {@link MongoClient} and it's {@link DB} instances
+ */
+public final class MongoDBFactory {
 
 	/**
 	 * The singletons instance
@@ -21,6 +24,8 @@ public class MongoDBFactory {
 	 * The name of the database
 	 */
 	private final String DATABASE_NAME;
+	
+	
 	
 	/**
 	 * Constructor.

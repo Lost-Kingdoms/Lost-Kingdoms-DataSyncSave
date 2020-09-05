@@ -23,7 +23,7 @@ import redis.clients.jedis.Jedis;
  *
  * @param <T> the class of the data that should be synced
  */
-public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {	
+public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {	
 	
 	/**
 	 * Constructor for {@link OrganizedSingleDataObject}.
@@ -68,8 +68,7 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				AbstractDataConverter<T> converter = getDataConverter();
 				
 				//Convert the data
-				@SuppressWarnings("unchecked")
-				T newData = (T) converter.convertFromDatabase(dataString);
+				T newData = converter.convertFromDatabase(dataString);
 				
 				//Conversion failed
 				if(newData == null) {
@@ -102,8 +101,7 @@ public class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				AbstractDataConverter<T> converter = getDataConverter();
 				
 				//Convert the data
-				@SuppressWarnings("unchecked")
-				T newData = (T) converter.convertFromDatabase(dataString);
+				T newData = converter.convertFromDatabase(dataString);
 				
 				//Conversion failed
 				if(newData == null) {

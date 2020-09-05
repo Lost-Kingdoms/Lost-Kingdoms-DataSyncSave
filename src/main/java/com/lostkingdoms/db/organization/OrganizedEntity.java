@@ -1,4 +1,4 @@
-package com.lostkingdoms.db.organization.objects;
+package com.lostkingdoms.db.organization;
 
 import java.util.UUID;
 

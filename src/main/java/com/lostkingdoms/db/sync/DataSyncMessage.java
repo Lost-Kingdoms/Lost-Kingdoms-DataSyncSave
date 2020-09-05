@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * The representation of a message to update a hashslot  
  */
-public class DataSyncMessage {
+public final class DataSyncMessage {
 
 	/**
 	 * Unique ID to identify the cache instance that initiated the data sync

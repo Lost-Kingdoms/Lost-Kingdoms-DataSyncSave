@@ -4,9 +4,16 @@ import java.util.UUID;
 
 import com.lostkingdoms.db.DataAccessManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
-import com.lostkingdoms.db.organization.objects.OrganizedEntity;
+import com.lostkingdoms.db.organization.OrganizedEntity;
 
-public class OrganizedObjectConverter<T extends OrganizedEntity> extends AbstractDataConverter<T> {
+/**
+ * A converter for {@link OrganizedEntity}s
+ * 
+ * @author Tim
+ *
+ * @param <T>
+ */
+public final class OrganizedObjectConverter<T extends OrganizedEntity> extends AbstractDataConverter<T> {
 
 	public OrganizedObjectConverter(Class<T> thisClass) {
 		super(thisClass);

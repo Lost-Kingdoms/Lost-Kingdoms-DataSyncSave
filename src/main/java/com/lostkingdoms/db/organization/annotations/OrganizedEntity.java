@@ -1,4 +1,4 @@
-package com.lostkingdoms.db.organization.enums;
+package com.lostkingdoms.db.organization.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

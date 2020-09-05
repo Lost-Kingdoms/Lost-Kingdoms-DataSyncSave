@@ -4,7 +4,7 @@ import com.lostkingdoms.db.organization.DataOrganizationManager;
 
 import redis.clients.jedis.JedisPubSub;
 
-public class DataSyncListener extends JedisPubSub {
+public final class DataSyncListener extends JedisPubSub {
 
 	@Override
 	public void onMessage(String channel, String message) {

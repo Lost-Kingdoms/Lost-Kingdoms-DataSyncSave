@@ -7,7 +7,7 @@ import redis.clients.jedis.JedisPoolConfig;
 /**
  * Provider class for {@link Jedis Pool} and it's {@link Jedis} instances
  */
-public class JedisFactory {
+public final class JedisFactory {
 
 	/**
 	 * The singletons instance
@@ -36,7 +36,7 @@ public class JedisFactory {
     /**
      * Get the {@link Jedis Pool}
      * 
-     * @return the {@link Jedis Pool}
+     * @return The {@link Jedis Pool}
      */
     public JedisPool getJedisPool() {
         return jedisPool;
@@ -45,7 +45,7 @@ public class JedisFactory {
     /**
      * Get a {@link Jedis} instance
      * 
-     * @return a {@link Jedis} instance
+     * @return A {@link Jedis} instance
      */
     public Jedis getJedis() {
     	return jedisPool.getResource();
