@@ -9,10 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.exceptions.MissingOrganizedEntityKeyException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedObjectKeyException;
 import com.lostkingdoms.db.exceptions.MissingOrganizedObjectTypeException;
-import com.lostkingdoms.db.organization.annotations.OrganizedEntity;
+import com.lostkingdoms.db.organization.OrganizedEntity;
 import com.lostkingdoms.db.organization.annotations.OrganizedObject;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
@@ -39,10 +40,10 @@ public final class DataAccessManager {
 	/**
 	 * A map containing all created entities mapped by it's class
 	 */
-	Map<Class<?>, Map<UUID, com.lostkingdoms.db.organization.OrganizedEntity>> managedEntities;
+	Map<Class<?>, Map<UUID, OrganizedEntity>> managedEntities;
 	
 	private DataAccessManager() {
-		managedEntities = new HashMap<Class<?>, Map<UUID,com.lostkingdoms.db.organization.OrganizedEntity>>();
+		managedEntities = new HashMap<Class<?>, Map<UUID, OrganizedEntity>>();
 	}
 	
 	/**
@@ -75,16 +76,16 @@ public final class DataAccessManager {
 	 * @param clazz
 	 * @param id
 	 */
-	public com.lostkingdoms.db.organization.OrganizedEntity getEntity(Class<?> clazz, UUID identifier) {
+	public OrganizedEntity getEntity(Class<?> clazz, UUID identifier) {
 		//Check if clazz is OrganizedEntity
-		if(clazz.getAnnotation(OrganizedEntity.class) == null) {
+		if(clazz.getAnnotation(com.lostkingdoms.db.organization.annotations.OrganizedEntity.class) == null) {
 			//TODO Error
 			return null;
 		}
 		
 		//If clazz extends the OrganizedEntity class
-		if(clazz.getSuperclass() != com.lostkingdoms.db.organization.OrganizedEntity.class
-				|| clazz == com.lostkingdoms.db.organization.OrganizedEntity.class) {
+		if(clazz.getSuperclass() != OrganizedEntity.class
+				|| clazz == OrganizedEntity.class) {
 			//TODO Error
 			return null;
 		}
@@ -97,13 +98,13 @@ public final class DataAccessManager {
 		} 
 		
 		//Object does not exist -> Create it
-		com.lostkingdoms.db.organization.OrganizedEntity orgEntity = buildOrganizedEntity(clazz, identifier);
+		OrganizedEntity orgEntity = buildOrganizedEntity(clazz, identifier);
 		
 		//Save created object to managedEntity Map
 		if(managedEntities.containsKey(clazz)) {
 			managedEntities.get(clazz).put(identifier, orgEntity);
 		} else {
-			Map<UUID, com.lostkingdoms.db.organization.OrganizedEntity> map = new HashMap<UUID, com.lostkingdoms.db.organization.OrganizedEntity>();
+			Map<UUID, OrganizedEntity> map = new HashMap<UUID, OrganizedEntity>();
 			map.put(identifier, orgEntity);
 			
 			managedEntities.put(clazz, map);
@@ -130,9 +131,9 @@ public final class DataAccessManager {
 	 * @param clazz
 	 * @return
 	 */
-	public List<com.lostkingdoms.db.organization.OrganizedEntity> getAllCachedEntities(Class<?> clazz) {
-		if(managedEntities.containsKey(clazz)) return (List<com.lostkingdoms.db.organization.OrganizedEntity>) managedEntities.get(clazz).values();
-		return new ArrayList<com.lostkingdoms.db.organization.OrganizedEntity>();
+	public List<OrganizedEntity> getAllCachedEntities(Class<?> clazz) {
+		if(managedEntities.containsKey(clazz)) return (List<OrganizedEntity>) managedEntities.get(clazz).values();
+		return new ArrayList<OrganizedEntity>();
 	}
 	
 	/**
@@ -146,7 +147,7 @@ public final class DataAccessManager {
 	 */
 	private com.lostkingdoms.db.organization.OrganizedEntity buildOrganizedEntity(Class<?> clazz, UUID identifier) {
 		// Check if requested class is OrganizedEntity
-		if(clazz.getAnnotation(OrganizedEntity.class) == null) return null;
+		if(clazz.getAnnotation(com.lostkingdoms.db.organization.annotations.OrganizedEntity.class) == null) return null;
 		
 		// Build object with reflection
 		try {
@@ -156,7 +157,7 @@ public final class DataAccessManager {
 			
 			for(Field field : obj.getClass().getDeclaredFields()) {
 				if(field.getAnnotation(OrganizedObject.class) != null) {
-					OrganizedEntity entAnn = clazz.getAnnotation(OrganizedEntity.class);
+					com.lostkingdoms.db.organization.annotations.OrganizedEntity entAnn = clazz.getAnnotation(com.lostkingdoms.db.organization.annotations.OrganizedEntity.class);
 					OrganizedObject objAnn = field.getAnnotation(OrganizedObject.class); 
 					
 					if(entAnn.key() != null && objAnn.key() != null) {
@@ -167,16 +168,28 @@ public final class DataAccessManager {
 						
 						Constructor<?> fConstr = null;
 						if(field.getType() == OrganizedSingleDataObject.class) {
-							fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
+							fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
 						}
 						if(field.getType() == OrganizedListDataObject.class) {
-							fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
+							fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
 						}
 						if(field.getType() == OrganizedMapDataObject.class) {
-							fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class);
+							fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
 						}	
 
-						OrganizedDataObject<?> orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType);
+						DefaultDataConverter<?> conv = null; 
+						
+						if(objAnn.listType() == null && objAnn.mapType() == null) {
+							conv = new DefaultDataConverter<>(objAnn.genericClass());
+						} else
+						if(objAnn.listType() != null) {
+							conv = new DefaultDataConverter<>(objAnn.genericClass(), objAnn.listType());
+						} else 
+						if(objAnn.mapType() != null) {
+							conv = new DefaultDataConverter<>(objAnn.genericClass(), objAnn.listType(), objAnn.mapType());
+						}
+						
+						OrganizedDataObject<?> orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
 						field.setAccessible(true);
 						field.set(obj, orgObj);
 						field.setAccessible(false);

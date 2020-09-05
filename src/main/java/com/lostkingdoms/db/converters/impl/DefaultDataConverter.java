@@ -1,6 +1,5 @@
 package com.lostkingdoms.db.converters.impl;
 
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
