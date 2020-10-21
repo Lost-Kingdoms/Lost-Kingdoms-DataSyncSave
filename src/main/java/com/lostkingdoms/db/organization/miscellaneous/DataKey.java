@@ -26,7 +26,7 @@ public final class DataKey {
 	/**
 	 * The identifier of the OrganizedEntity
 	 */
-	private UUID identifier;
+	private Object identifier;
 	
 	/**
 	 * The hashslot of the redis key
@@ -42,7 +42,7 @@ public final class DataKey {
 	 * @param subKey
 	 * @param identifier
 	 */
-	public DataKey(String mainKey, String subKey, UUID identifier) {
+	public DataKey(String mainKey, String subKey, Object identifier) {
 		this.mainKey = mainKey;
 		this.subKey = subKey;
 		this.identifier = identifier;
@@ -55,7 +55,7 @@ public final class DataKey {
 	 * @return the redis key
 	 */
 	public String getRedisKey() {
-		return (this.mainKey + "." + this.subKey + "." + this.identifier.toString());
+		return (this.mainKey + "." + this.subKey + "." + identifierToString());
 	}
 	
 	/**
@@ -73,7 +73,16 @@ public final class DataKey {
 	 * @return the mongoDB identifier
 	 */
 	public String getMongoDBIdentifier() {
-		return this.identifier.toString();
+		return identifierToString();
+	}
+	
+	private String identifierToString() {
+		Class<?> idClass = this.identifier.getClass();
+		
+		if(idClass == UUID.class) return ((UUID)this.identifier).toString();
+		if(idClass == String.class) return (String) this.identifier;
+		if(idClass.isEnum()) return ((Enum<?>)this.identifier).name();
+		return "";
 	}
 	
 	/**

@@ -27,9 +27,10 @@ public final class JedisFactory {
 	 */
     public JedisFactory() {
         JedisPoolConfig poolConfig = new JedisPoolConfig();
+        
         jedisPool = new JedisPool(
-            poolConfig,
-            "localhost"
+            "127.0.0.1",
+            6379
         );
     }
 

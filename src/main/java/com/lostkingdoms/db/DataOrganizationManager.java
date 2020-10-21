@@ -4,11 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.omg.CORBA.OMGVMCID;
+
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
-import com.lostkingdoms.db.converters.impl.OrganizedObjectConverter;
+import com.lostkingdoms.db.converters.impl.OrganizedEntityConverter;
 import com.lostkingdoms.db.database.JedisFactory;
-import com.lostkingdoms.db.organization.OrganizedEntity;
+import com.lostkingdoms.db.database.MongoDBFactory;
+import com.lostkingdoms.db.logger.LKLogger;
+import com.lostkingdoms.db.logger.LogLevel;
+import com.lostkingdoms.db.logger.LogType;
 import com.lostkingdoms.db.sync.DataSyncListener;
 
 import redis.clients.jedis.Jedis;
@@ -57,18 +62,43 @@ public final class DataOrganizationManager {
 	 * Constructor of the {@link DataOrganizationManager}
 	 */
 	public DataOrganizationManager() {
-		Jedis jedis = JedisFactory.getInstance().getJedis();
+		instance = this;
+		LKLogger.getInstance().setLevel(LogLevel.DEBUG);
+		LKLogger.getInstance().setLogType(LogType.ALL);
+		
+		LKLogger.getInstance().info("Lost-Kingdoms-DataSync Starting", LogType.STARTUP);
+		
+		LKLogger.getInstance().info("MongoDB starting up", LogType.STARTUP);
+		MongoDBFactory.getInstance();
+		LKLogger.getInstance().info("MongoDB succesfully started", LogType.STARTUP);
 		
 		try {
 			converters = new HashMap<Class<?>, AbstractDataConverter<?>>();
 			instanceID = UUID.randomUUID();
+			LKLogger.getInstance().debug("Session id is" + instanceID.toString(), LogType.STARTUP);
 			lastUpdated = new long[HASH_SLOT_COUNT];
-
-			jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
-		} finally {
-			jedis.close();
+			
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					LKLogger.getInstance().info("Jedis starting up", LogType.STARTUP);
+					Jedis jedis = JedisFactory.getInstance().getJedis();
+					LKLogger.getInstance().info("Jedis succesfully started", LogType.STARTUP);
+					
+					LKLogger.getInstance().debug("Sync Listener subscribed", LogType.STARTUP);
+					jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
+					
+					LKLogger.getInstance().warn("Sync Listener closed!", LogType.STARTUP);
+					jedis.quit();
+				}
+			}, "sync_Listener").start();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 		
+		LKLogger.getInstance().info("Lost-Kingdoms-DataSync succesfully started", LogType.STARTUP);
 	}
 	
 	/**
@@ -96,13 +126,13 @@ public final class DataOrganizationManager {
 	}
 	
 	/**
-	 * Register a {@link OrganizedEntity} and it's corresponding {@link OrganizedObjectConverter}
+	 * Register a {@link OrganizedEntity} and it's corresponding {@link OrganizedEntityConverter}
 	 * 
 	 * @param clazz
 	 * @param converter
 	 */
-	public void registerOrganizedEntity(Class<? extends OrganizedEntity> clazz, 
-			OrganizedObjectConverter<OrganizedEntity> converter) {
+	public void registerOrganizedEntity(Class<?> clazz, 
+			OrganizedEntityConverter<Object> converter) {
 		registerDataConverter(clazz, converter);
 	}
 	
@@ -113,6 +143,7 @@ public final class DataOrganizationManager {
 	 */
 	public void registerDataConverter(Class<?> clazz, AbstractDataConverter<?> converter) {
 		converters.put(clazz, converter);
+		LKLogger.getInstance().debug("Data Converter registered: " + clazz.getSimpleName(), LogType.STARTUP);
 	}
 	
 	/**

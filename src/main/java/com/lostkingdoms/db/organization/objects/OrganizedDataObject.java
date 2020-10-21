@@ -96,7 +96,7 @@ public abstract class OrganizedDataObject<T> {
 	 * @param converter
 	 */
 	protected void setDataConverter(AbstractDataConverter<T> converter) {
-		if(this.converter != null) this.converter = converter;
+		if(this.converter == null) this.converter = converter;
 	}
 	
 	/**

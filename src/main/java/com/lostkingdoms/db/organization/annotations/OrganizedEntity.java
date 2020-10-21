@@ -14,6 +14,6 @@ public @interface OrganizedEntity {
 	 * 
 	 * @return
 	 */
-	String key();
+	String entityKey();
 	
 }

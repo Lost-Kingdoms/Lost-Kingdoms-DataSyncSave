@@ -21,6 +21,14 @@ import com.mongodb.DBObject;
 
 import redis.clients.jedis.Jedis;
 
+/**
+ * An {@link OrganizedDataObject} which represents an {@link ArrayList} of type T.
+ * Provides basic list methods. Later it is planned to fully implement {@link List} interface
+ * 
+ * @author Tim
+ *
+ * @param <T>
+ */
 public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>> {
 
 	/**
@@ -50,6 +58,8 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			long newTimestamp = System.currentTimeMillis() - 1;
 			
 			short hashslot = getDataKey().getHashslot();
+			//TODO
+			hashslot = 100;
 			
 			// If data is up-to-date
 			if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0) {
@@ -88,10 +98,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 
 			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
 			BasicDBObject query = new BasicDBObject();
-			query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+			query.put("uuid", dataKey.getMongoDBIdentifier());
 
 			DBObject object = collection.findOne(query);
-			dataString = (String) object.get(dataKey.getMongoDBValue());
+			if(object != null) {
+				dataString = (String) object.get(dataKey.getMongoDBValue());
+			}
 
 			//Check if data is null
 			if(dataString != null) {
@@ -132,6 +144,8 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 	 */
 	public void add(T element) {
 		short hashslot = getDataKey().getHashslot();
+		//TODO
+		hashslot = 100;
 		
 		if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
 			setData((ArrayList<T>) getList());
@@ -173,17 +187,30 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			//Update to MongoDB
 			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
-
+				
+				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+				query.put("uuid", dataKey.getMongoDBIdentifier());
+				
+				DBObject object = collection.findOne(query);
+				if(object != null) {
+					query = new BasicDBObject();
+					query.put("uuid", dataKey.getMongoDBIdentifier());
 
-				BasicDBObject newDoc = new BasicDBObject();
-				newDoc.put(dataKey.getMongoDBValue(), dataString);
-				
-				BasicDBObject update = new BasicDBObject();
-				update.put("$set", newDoc);
-				
-				collection.update(query, update);
+					BasicDBObject newDoc = new BasicDBObject();
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
+					
+					BasicDBObject update = new BasicDBObject();
+					update.put("$set", newDoc);
+					
+					collection.update(query, update);
+				}  else {
+					BasicDBObject create = new BasicDBObject();
+					create.put("uuid", dataKey.getMongoDBIdentifier());
+					create.put(dataKey.getMongoDBValue(), dataString);
+					
+					collection.insert(create);
+				}
 			}
 			
 			//Publish to other servers via redis
@@ -247,17 +274,30 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				//Update to MongoDB
 				if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
-
+					
+					//Test if object already exists
 					BasicDBObject query = new BasicDBObject();
-					query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+					query.put("uuid", dataKey.getMongoDBIdentifier());
+					
+					DBObject object = collection.findOne(query);
+					if(object != null) {
+						query = new BasicDBObject();
+						query.put("uuid", dataKey.getMongoDBIdentifier());
 
-					BasicDBObject newDoc = new BasicDBObject();
-					newDoc.put(dataKey.getMongoDBValue(), dataString);
-					
-					BasicDBObject update = new BasicDBObject();
-					update.put("$set", newDoc);
-					
-					collection.update(query, update);
+						BasicDBObject newDoc = new BasicDBObject();
+						newDoc.put(dataKey.getMongoDBValue(), dataString);
+						
+						BasicDBObject update = new BasicDBObject();
+						update.put("$set", newDoc);
+						
+						collection.update(query, update);
+					}  else {
+						BasicDBObject create = new BasicDBObject();
+						create.put("uuid", dataKey.getMongoDBIdentifier());
+						create.put(dataKey.getMongoDBValue(), dataString);
+						
+						collection.insert(create);
+					}
 				}
 				
 				//Publish to other servers via redis

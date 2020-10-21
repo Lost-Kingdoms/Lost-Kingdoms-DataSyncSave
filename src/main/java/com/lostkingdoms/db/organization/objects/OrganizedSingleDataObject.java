@@ -7,6 +7,8 @@ import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.database.JedisFactory;
 import com.lostkingdoms.db.database.MongoDBFactory;
+import com.lostkingdoms.db.logger.LKLogger;
+import com.lostkingdoms.db.logger.LogType;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 import com.lostkingdoms.db.sync.DataSyncMessage;
@@ -25,6 +27,8 @@ import redis.clients.jedis.Jedis;
  */
 public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {	
 	
+	private Object defaultValue = null;
+	
 	/**
 	 * Constructor for {@link OrganizedSingleDataObject}.
 	 * This represent a single object that should be organized (no list, map).
@@ -36,6 +40,22 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		setDataKey(dataKey);
 		setDataConverter(converter);
 		setOrganizationType(organizationType);
+	}
+	
+	/**
+	 * Constructor for {@link OrganizedSingleDataObject}.
+	 * This represent a single object that should be organized (no list, map).
+	 * 
+	 * @param dataKey The objects {@link DataKey}
+	 * @param organizationType The objects {@link OrganizationType}
+	 * @param converter The converter of this object
+	 * @param the default value of this object
+	 */
+	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<T> converter, Object defaultValue) {
+		setDataKey(dataKey);
+		setDataConverter(converter);
+		setOrganizationType(organizationType);
+		this.defaultValue = defaultValue;
 	}
 	
 	/**
@@ -52,14 +72,18 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			long newTimestamp = System.currentTimeMillis() - 1;
 			
 			short hashslot = getDataKey().getHashslot();
+			LKLogger.getInstance().debug("SingleDataGet Hashslot: " + hashslot, LogType.GET);
+			hashslot = 100;
 			
 			// If data is up-to-date
+			LKLogger.getInstance().debug("SingleDataGet Timestamp: " + DataOrganizationManager.getInstance().getLastUpdated(hashslot) + "   " + getTimestamp(), LogType.GET);
 			if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0) {
 				return getData();
 			}
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
+			LKLogger.getInstance().debug("SingleDataGet RedisData: " + getDataKey().getRedisKey() + "   " + jedis.get(getDataKey().getRedisKey()), LogType.GET);
 			String dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
@@ -90,12 +114,16 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		
 			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
 			BasicDBObject query = new BasicDBObject();
-			query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+			query.put("uuid", dataKey.getMongoDBIdentifier());
 			
 			DBObject object = collection.findOne(query);
-			dataString = (String) object.get(dataKey.getMongoDBValue());
+			if(object != null) {
+				dataString = (String) object.get(dataKey.getMongoDBValue());
+			} 
+			
 			
 			//Check if data is null
+			LKLogger.getInstance().debug("SingleDataGet MongoData: " + dataKey.getMongoDBValue(), LogType.GET);
 			if(dataString != null) {
 				//Get the converter to convert the data 
 				AbstractDataConverter<T> converter = getDataConverter();
@@ -120,7 +148,10 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				return getData();
 			}
 			
-			//Data does not exist yet
+			//Data does not exist yet (check for default value)
+			if(defaultValue != null) {
+				return (T) defaultValue;
+			}
 			return null;
 		} finally {
 			jedis.close();
@@ -145,12 +176,15 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			//Get the data key
 			DataKey dataKey = getDataKey();
+			LKLogger.getInstance().debug("SingleDataSet: DataKey " + dataKey , LogType.ALL);
 			
 			//Get the data converter
 			AbstractDataConverter<T> converter = getDataConverter();
+			LKLogger.getInstance().debug("SingleDataSet: DataConverter " + converter , LogType.ALL);
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(data);
+			LKLogger.getInstance().debug("SingleDataSet: DataString " + dataString , LogType.ALL);
 			if(dataString == null) {
 				return;
 			}
@@ -165,17 +199,30 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			//Update to MongoDB
 			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
-
+				
+				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+				query.put("uuid", dataKey.getMongoDBIdentifier());
+				
+				DBObject object = collection.findOne(query);
+				if(object != null) {
+					query = new BasicDBObject();
+					query.put("uuid", dataKey.getMongoDBIdentifier());
 
-				BasicDBObject newDoc = new BasicDBObject();
-				newDoc.put(dataKey.getMongoDBValue(), dataString);
-				
-				BasicDBObject update = new BasicDBObject();
-				update.put("$set", newDoc);
-				
-				collection.update(query, update);
+					BasicDBObject newDoc = new BasicDBObject();
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
+					
+					BasicDBObject update = new BasicDBObject();
+					update.put("$set", newDoc);
+					
+					collection.update(query, update);
+				}  else {
+					BasicDBObject create = new BasicDBObject();
+					create.put("uuid", dataKey.getMongoDBIdentifier());
+					create.put(dataKey.getMongoDBValue(), dataString);
+					
+					collection.insert(create);
+				}
 			}
 			
 			//Publish to other servers via redis

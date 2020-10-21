@@ -39,7 +39,7 @@ public final class MongoDBFactory {
 		}
 		
 		//TODO Read db name
-		DATABASE_NAME = "TODO";
+		DATABASE_NAME = "Lostkingdoms";
 	}
 	
 	/**
