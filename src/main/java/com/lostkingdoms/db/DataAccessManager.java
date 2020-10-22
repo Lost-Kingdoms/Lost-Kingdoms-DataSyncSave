@@ -64,7 +64,7 @@ public final class DataAccessManager {
 	 * @param identifier
 	 * @return true if the entity is locally cached
 	 */
-	public boolean isCached(Class<?> clazz, UUID identifier) {
+	public boolean isCached(Class<?> clazz, Object identifier) {
 		if(managedEntities.containsKey(clazz)) {
 			if(managedEntities.get(clazz).containsKey(identifier)) return true;
 		}
@@ -72,7 +72,7 @@ public final class DataAccessManager {
 	}
 	
 	/**
-	 * Get a managed entity by it's class and uuid.
+	 * Get a managed entity by it's class and identifier.
 	 * 
 	 * @param clazz
 	 * @param id
@@ -165,7 +165,7 @@ public final class DataAccessManager {
 	 * @param clazz
 	 * @param identifier
 	 */
-	public void removeEntity(Class<?> clazz, UUID identifier) {
+	public void removeEntity(Class<?> clazz, Object identifier) {
 		if(managedEntities.containsKey(clazz)) {
 			managedEntities.get(clazz).remove(identifier);
 		}

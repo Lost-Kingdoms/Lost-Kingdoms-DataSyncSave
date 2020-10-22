@@ -96,7 +96,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 
 			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
 			BasicDBObject query = new BasicDBObject();
-			query.put("uuid", dataKey.getMongoDBIdentifier());
+			query.put("identifier", dataKey.getMongoDBIdentifier());
 
 			DBObject object = collection.findOne(query);
 			if(object != null) {
@@ -130,6 +130,78 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 
 			//Data does not exist yet
 			return getData();
+		} finally {
+			jedis.close();
+		}
+	}
+	
+	public void setMap(HashMap<K, V> map) {
+		Jedis jedis = JedisFactory.getInstance().getJedis();	
+		DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
+		
+		try {
+			long newTimestamp = System.currentTimeMillis() - 1;
+			
+			//Update the timestamp for last change
+			updateTimestamp(newTimestamp);
+			
+			//Get the data key
+			DataKey dataKey = getDataKey();
+			
+			//Get the data converter
+			AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
+			
+			//Conversion to redis and mongoDB
+			String dataString = converter.convertToDatabase(map);
+			if(dataString == null) {
+				return;
+			}
+			
+			//Update to redis
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if(dataString.equals("")) {
+					jedis.del(dataKey.getRedisKey());
+				} else {
+					jedis.set(dataKey.getRedisKey(), dataString);
+				}
+			}
+			
+			//Update to MongoDB
+			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
+				
+				//Test if object already exists
+				BasicDBObject query = new BasicDBObject();
+				query.put("identifier", dataKey.getMongoDBIdentifier());
+				
+				DBObject object = collection.findOne(query);
+				if(object != null) {
+					query = new BasicDBObject();
+					query.put("identifier", dataKey.getMongoDBIdentifier());
+
+					BasicDBObject newDoc = new BasicDBObject();
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
+					
+					BasicDBObject update = new BasicDBObject();
+					update.put("$set", newDoc);
+					
+					collection.update(query, update);
+				}  else {
+					BasicDBObject create = new BasicDBObject();
+					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(dataKey.getMongoDBValue(), dataString);
+					
+					collection.insert(create);
+				}
+			}
+			
+			//Publish to other servers via redis
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
+			}
+			
+			//Set the local data
+			setData(map);
 		} finally {
 			jedis.close();
 		}
@@ -177,10 +249,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			}
 			
 			//Update to redis
-			if(dataString.equals("")) {
-				jedis.del(dataKey.getRedisKey());
-			} else {
-				jedis.set(dataKey.getRedisKey(), dataString);
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if(dataString.equals("")) {
+					jedis.del(dataKey.getRedisKey());
+				} else {
+					jedis.set(dataKey.getRedisKey(), dataString);
+				}
 			}
 			
 			//Update to MongoDB
@@ -189,12 +263,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", dataKey.getMongoDBIdentifier());
+				query.put("identifier", dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("uuid", dataKey.getMongoDBIdentifier());
+					query.put("identifier", dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -205,7 +279,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("uuid", dataKey.getMongoDBIdentifier());
+					create.put("identifier", dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);
@@ -264,10 +338,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				}
 				
 				//Update to redis
-				if(dataString.equals("")) {
-					jedis.del(dataKey.getRedisKey());
-				} else {
-					jedis.set(dataKey.getRedisKey(), dataString);
+				if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+					if(dataString.equals("")) {
+						jedis.del(dataKey.getRedisKey());
+					} else {
+						jedis.set(dataKey.getRedisKey(), dataString);
+					}
 				}
 				
 				//Update to MongoDB
@@ -276,12 +352,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					
 					//Test if object already exists
 					BasicDBObject query = new BasicDBObject();
-					query.put("uuid", dataKey.getMongoDBIdentifier());
+					query.put("identifier", dataKey.getMongoDBIdentifier());
 					
 					DBObject object = collection.findOne(query);
 					if(object != null) {
 						query = new BasicDBObject();
-						query.put("uuid", dataKey.getMongoDBIdentifier());
+						query.put("identifier", dataKey.getMongoDBIdentifier());
 
 						BasicDBObject newDoc = new BasicDBObject();
 						newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -292,7 +368,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 						collection.update(query, update);
 					}  else {
 						BasicDBObject create = new BasicDBObject();
-						create.put("uuid", dataKey.getMongoDBIdentifier());
+						create.put("identifier", dataKey.getMongoDBIdentifier());
 						create.put(dataKey.getMongoDBValue(), dataString);
 						
 						collection.insert(create);
@@ -336,7 +412,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+				query.put("identifier", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 				BasicDBObject newDoc = new BasicDBObject();
 				newDoc.put(dataKey.getMongoDBValue(), "");

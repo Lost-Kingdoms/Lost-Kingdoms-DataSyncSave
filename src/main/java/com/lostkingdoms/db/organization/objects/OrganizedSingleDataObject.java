@@ -64,6 +64,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	 * 
 	 * @return the data of this {@link OrganizedSingleDataObject}
 	 */
+	@SuppressWarnings("unchecked")
 	public T get() {	
 		Jedis jedis = JedisFactory.getInstance().getJedis();	
 		DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
@@ -114,7 +115,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		
 			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
 			BasicDBObject query = new BasicDBObject();
-			query.put("uuid", dataKey.getMongoDBIdentifier());
+			query.put("identifier", dataKey.getMongoDBIdentifier());
 			
 			DBObject object = collection.findOne(query);
 			if(object != null) {
@@ -190,10 +191,12 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			}
 
 			//Update to redis
-			if(dataString.equals("")) {
-				jedis.del(dataKey.getRedisKey());
-			} else {
-				jedis.set(dataKey.getRedisKey(), dataString);
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if(dataString.equals("")) {
+					jedis.del(dataKey.getRedisKey());
+				} else {
+					jedis.set(dataKey.getRedisKey(), dataString);
+				}
 			}
 			
 			//Update to MongoDB
@@ -202,12 +205,12 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", dataKey.getMongoDBIdentifier());
+				query.put("identifier", dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("uuid", dataKey.getMongoDBIdentifier());
+					query.put("identifier", dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -218,7 +221,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("uuid", dataKey.getMongoDBIdentifier());
+					create.put("identifier", dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);

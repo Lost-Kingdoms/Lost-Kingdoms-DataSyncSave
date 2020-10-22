@@ -98,7 +98,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 
 			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
 			BasicDBObject query = new BasicDBObject();
-			query.put("uuid", dataKey.getMongoDBIdentifier());
+			query.put("identifier", dataKey.getMongoDBIdentifier());
 
 			DBObject object = collection.findOne(query);
 			if(object != null) {
@@ -132,6 +132,83 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 
 			//Data does not exist yet
 			return getData();
+		} finally {
+			jedis.close();
+		}
+	}
+	
+	/**
+	 * Set an {@link ArrayList}
+	 * 
+	 * @param list
+	 */
+	public void setList(ArrayList<T> list) {
+		Jedis jedis = JedisFactory.getInstance().getJedis();	
+		DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
+		
+		try {
+			long newTimestamp = System.currentTimeMillis() - 1;
+			
+			//Update the timestamp for last change
+			updateTimestamp(newTimestamp);
+			
+			//Get the data key
+			DataKey dataKey = getDataKey();
+			
+			//Get the data converter
+			AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+			
+			//Conversion to redis and mongoDB
+			String dataString = converter.convertToDatabase(list);
+			if(dataString == null) {
+				return;
+			}
+			
+			//Update to redis
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if(dataString.equals("")) {
+					jedis.del(dataKey.getRedisKey());
+				} else {
+					jedis.set(dataKey.getRedisKey(), dataString);
+				}
+			}
+			
+			//Update to MongoDB
+			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
+				
+				//Test if object already exists
+				BasicDBObject query = new BasicDBObject();
+				query.put("identifier", dataKey.getMongoDBIdentifier());
+				
+				DBObject object = collection.findOne(query);
+				if(object != null) {
+					query = new BasicDBObject();
+					query.put("identifier", dataKey.getMongoDBIdentifier());
+
+					BasicDBObject newDoc = new BasicDBObject();
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
+					
+					BasicDBObject update = new BasicDBObject();
+					update.put("$set", newDoc);
+					
+					collection.update(query, update);
+				}  else {
+					BasicDBObject create = new BasicDBObject();
+					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(dataKey.getMongoDBValue(), dataString);
+					
+					collection.insert(create);
+				}
+			}
+			
+			//Publish to other servers via redis
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
+			}
+			
+			//Set the local data
+			setData(list);
 		} finally {
 			jedis.close();
 		}
@@ -178,10 +255,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to redis
-			if(dataString.equals("")) {
-				jedis.del(dataKey.getRedisKey());
-			} else {
-				jedis.set(dataKey.getRedisKey(), dataString);
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if(dataString.equals("")) {
+					jedis.del(dataKey.getRedisKey());
+				} else {
+					jedis.set(dataKey.getRedisKey(), dataString);
+				}
 			}
 			
 			//Update to MongoDB
@@ -190,12 +269,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", dataKey.getMongoDBIdentifier());
+				query.put("identifier", dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("uuid", dataKey.getMongoDBIdentifier());
+					query.put("identifier", dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -206,7 +285,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("uuid", dataKey.getMongoDBIdentifier());
+					create.put("identifier", dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);
@@ -265,10 +344,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				}
 				
 				//Update to redis
-				if(dataString.equals("")) {
-					jedis.del(dataKey.getRedisKey());
-				} else {
-					jedis.set(dataKey.getRedisKey(), dataString);
+				if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+					if(dataString.equals("")) {
+						jedis.del(dataKey.getRedisKey());
+					} else {
+						jedis.set(dataKey.getRedisKey(), dataString);
+					}
 				}
 				
 				//Update to MongoDB
@@ -277,12 +358,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					
 					//Test if object already exists
 					BasicDBObject query = new BasicDBObject();
-					query.put("uuid", dataKey.getMongoDBIdentifier());
+					query.put("identifier", dataKey.getMongoDBIdentifier());
 					
 					DBObject object = collection.findOne(query);
 					if(object != null) {
 						query = new BasicDBObject();
-						query.put("uuid", dataKey.getMongoDBIdentifier());
+						query.put("identifier", dataKey.getMongoDBIdentifier());
 
 						BasicDBObject newDoc = new BasicDBObject();
 						newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -293,7 +374,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 						collection.update(query, update);
 					}  else {
 						BasicDBObject create = new BasicDBObject();
-						create.put("uuid", dataKey.getMongoDBIdentifier());
+						create.put("identifier", dataKey.getMongoDBIdentifier());
 						create.put(dataKey.getMongoDBValue(), dataString);
 						
 						collection.insert(create);
@@ -337,7 +418,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				BasicDBObject query = new BasicDBObject();
-				query.put("uuid", new ObjectId(dataKey.getMongoDBIdentifier()));
+				query.put("identifier", new ObjectId(dataKey.getMongoDBIdentifier()));
 
 				BasicDBObject newDoc = new BasicDBObject();
 				newDoc.put(dataKey.getMongoDBValue(), "");
@@ -382,6 +463,97 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 		List<T> list = getList();
 		
 		return list.size();
+	}
+
+	/**
+	 * Set the element on index i to the given element
+	 * 
+	 * @param i
+	 * @param element
+	 */
+	public void set(int i, T element) {
+		short hashslot = getDataKey().getHashslot();
+		//TODO
+		hashslot = 100;
+		
+		if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
+			setData((ArrayList<T>) getList());
+		}
+		
+		Jedis jedis = JedisFactory.getInstance().getJedis();	
+		DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
+		
+		//Updated list (clone)
+		@SuppressWarnings("unchecked")
+		ArrayList<T> temp = (ArrayList<T>) getData().clone();
+		temp.set(i, element);
+		
+		try {
+			long newTimestamp = System.currentTimeMillis() - 1;
+			
+			//Update the timestamp for last change
+			updateTimestamp(newTimestamp);
+			
+			//Get the data key
+			DataKey dataKey = getDataKey();
+			
+			//Get the data converter
+			AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+			
+			//Conversion to redis and mongoDB
+			String dataString = converter.convertToDatabase(temp);
+			if(dataString == null) {
+				return;
+			}
+			
+			//Update to redis
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if(dataString.equals("")) {
+					jedis.del(dataKey.getRedisKey());
+				} else {
+					jedis.set(dataKey.getRedisKey(), dataString);
+				}
+			}
+			
+			//Update to MongoDB
+			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
+				
+				//Test if object already exists
+				BasicDBObject query = new BasicDBObject();
+				query.put("identifier", dataKey.getMongoDBIdentifier());
+				
+				DBObject object = collection.findOne(query);
+				if(object != null) {
+					query = new BasicDBObject();
+					query.put("identifier", dataKey.getMongoDBIdentifier());
+
+					BasicDBObject newDoc = new BasicDBObject();
+					newDoc.put(dataKey.getMongoDBValue(), dataString);
+					
+					BasicDBObject update = new BasicDBObject();
+					update.put("$set", newDoc);
+					
+					collection.update(query, update);
+				}  else {
+					BasicDBObject create = new BasicDBObject();
+					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(dataKey.getMongoDBValue(), dataString);
+					
+					collection.insert(create);
+				}
+			}
+			
+			//Publish to other servers via redis
+			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
+			}
+			
+			//Set the local data
+			setData(temp);
+		} finally {
+			jedis.close();
+		}
 	}
 	
 }
