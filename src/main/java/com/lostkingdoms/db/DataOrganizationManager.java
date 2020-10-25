@@ -4,16 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.omg.CORBA.OMGVMCID;
-
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.converters.impl.OrganizedEntityConverter;
-import com.lostkingdoms.db.database.JedisFactory;
-import com.lostkingdoms.db.database.MongoDBFactory;
+import com.lostkingdoms.db.factories.JedisFactory;
+import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.logger.LKLogger;
 import com.lostkingdoms.db.logger.LogLevel;
 import com.lostkingdoms.db.logger.LogType;
+import com.lostkingdoms.db.organization.annotations.OrganizedEntity;
 import com.lostkingdoms.db.sync.DataSyncListener;
 
 import redis.clients.jedis.Jedis;
@@ -132,7 +131,7 @@ public final class DataOrganizationManager {
 	 * @param converter
 	 */
 	public void registerOrganizedEntity(Class<?> clazz, 
-			OrganizedEntityConverter<Object> converter) {
+			OrganizedEntityConverter<?> converter) {
 		registerDataConverter(clazz, converter);
 	}
 	

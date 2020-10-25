@@ -7,21 +7,31 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
-import com.lostkingdoms.db.logger.LKLogger;
-import com.lostkingdoms.db.logger.LogType;
-import com.lostkingdoms.db.organization.annotations.Identifier;
+import com.lostkingdoms.db.exceptions.NoOrganizedEntityException;
+import com.lostkingdoms.db.exceptions.WrongIdentifierException;
+import com.lostkingdoms.db.exceptions.WrongMethodUseException;
+import com.lostkingdoms.db.factories.JedisFactory;
+import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.organization.annotations.OrganizedEntity;
 import com.lostkingdoms.db.organization.annotations.OrganizedObject;
 import com.lostkingdoms.db.organization.annotations.OrganizedSuperentity;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
+import com.lostkingdoms.db.organization.miscellaneous.OrganizedEntityInformation;
+import com.lostkingdoms.db.organization.miscellaneous.OrganizedObjectInformation;
 import com.lostkingdoms.db.organization.objects.OrganizedDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedListDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedMapDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+
+import redis.clients.jedis.Jedis;
 
 /**
  * Manager that handles the creation, destruction and query of all organized data types and entities
@@ -36,16 +46,19 @@ public final class DataAccessManager {
 	 */
 	private static DataAccessManager instance;
 	
-	
-	
 	/**
 	 * A map containing all created entities mapped by it's class
 	 */
-	Map<Class<?>, Map<Object, Object>> managedEntities;
+	private Map<Class<?>, Map<Object, Object>> managedEntities;
+	
+	
 	
 	private DataAccessManager() {
+		instance = this;
 		managedEntities = new HashMap<Class<?>, Map<Object, Object>>();
 	}
+	
+	
 	
 	/**
 	 * Get the instance of this manager
@@ -56,6 +69,8 @@ public final class DataAccessManager {
 		if(instance == null) instance = new DataAccessManager();
 		return instance;
 	}
+	
+	
 	
 	/**
 	 * Check if a entity is locally cached
@@ -71,108 +86,80 @@ public final class DataAccessManager {
 		return false;
 	}
 	
-	/**
-	 * Get a managed entity by it's class and identifier.
-	 * 
-	 * @param clazz
-	 * @param id
-	 */
-	public Object getEntity(Class<?> clazz, Object identifier) {
-		//Check if clazz is OrganizedEntity
-		if(clazz.getAnnotation(OrganizedEntity.class) == null) {
-			LKLogger.getInstance().warn("Class has no OrgananizedEntity annotation: " + clazz.getSimpleName(), LogType.OBJECT_CREATION);
-			//TODO Error
-			return null;
-		}
-		
-		Class<?> identifierClass = null;
-		for(Field f : clazz.getDeclaredFields()) {
-			if(f.getAnnotation(Identifier.class) != null) {
-				if(identifierClass != null) {
-					//TODO Error (2 or more identifiers)
-					return null;
-				}
-				identifierClass = f.getClass();
-			}
-		}
-		
-		//Check for identifier in superclass
-		if(identifierClass == null) {
-			if(clazz.getSuperclass() != null && (clazz.getSuperclass().getAnnotation(OrganizedSuperentity.class) != null 
-					|| clazz.getSuperclass().getAnnotation(OrganizedEntity.class) != null)) {
-				for(Field f : clazz.getSuperclass().getDeclaredFields()) {
-					if(f.getAnnotation(Identifier.class) != null) {
-						if(identifierClass != null) {
-							//TODO Error (2 or more identifiers)
-							return null;
-						}
-						identifierClass = f.getClass();
-					}
-				}
-			}
-		}
-		
-		if(identifierClass == null) {
-			LKLogger.getInstance().warn("Class has no identifier: " + clazz.getSimpleName(), LogType.OBJECT_CREATION);
-			//TODO Error
-			return null;
-		}
-		
-		//Test id identifier is a acceptable class
-		if(identifierClass != String.class && identifierClass != UUID.class && !identifierClass.isEnum()) {
-			LKLogger.getInstance().warn("Class has wrong identifier class: " + clazz.getSimpleName() + "  "+ identifierClass.getSimpleName(), LogType.OBJECT_CREATION);
-			//TODO Error
-			return null;
-		}
-		
-		//Test if given identifier matches the identifier class of this object
-		if(!identifierClass.isInstance(identifier)) {
-			LKLogger.getInstance().warn("Wrong identifier given: " + identifier.getClass().getSimpleName() + "  "+ identifierClass.getSimpleName(), LogType.OBJECT_CREATION);
-			//TODO Error
-			return null;
-		}
-		
-		//Check if this entity already exists an return it if so
-		if(managedEntities.containsKey(clazz)) {
-			LKLogger.getInstance().debug("Class exists in managedEntities map: " + clazz.getSimpleName(), LogType.OBJECT_CREATION);
-			if(managedEntities.get(clazz).containsKey(identifier)) {
-				LKLogger.getInstance().debug("Identifier exists in managedEntities map: " + clazz.getSimpleName() + " , " + identifier, LogType.OBJECT_CREATION);
-				return managedEntities.get(clazz).get(identifier);
-			}
-		} 
-		
-		//Object does not exist -> Create it
-		LKLogger.getInstance().debug("OrgEntity does not yet exist: " + clazz.getSimpleName() + " , " + identifier, LogType.OBJECT_CREATION);
-		Object orgEntity = buildOrganizedEntity(clazz, identifier);
-		LKLogger.getInstance().debug("OrgEntity created: " + orgEntity, LogType.OBJECT_CREATION);
-		
-		//Save created object to managedEntity Map
-		if(managedEntities.containsKey(clazz)) {
-			managedEntities.get(clazz).put(identifier, orgEntity);
-		} else {
-			Map<Object, Object> map = new HashMap<Object, Object>();
-			map.put(identifier, orgEntity);
-			
-			managedEntities.put(clazz, map);
-		}
+//	
+//	
+//	public boolean isInDatabase() {
+//		//TODO
+//	}
+//	
 	
-		return orgEntity;
-	}
-	
+
 	/**
-	 * Remove a managed entity from local cache
+	 * Remove class with identifier from local cahce, redis and database
 	 * 
 	 * @param clazz
 	 * @param identifier
 	 */
 	public void removeEntity(Class<?> clazz, Object identifier) {
-		if(managedEntities.containsKey(clazz)) {
-			managedEntities.get(clazz).remove(identifier);
+		Jedis jedis = JedisFactory.getInstance().getJedis();
+		try {
+			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
+			
+			//Local cache
+			if(managedEntities.containsKey(clazz)) {
+				managedEntities.get(clazz).remove(identifier);
+			}
+			
+			//Redis		
+			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
+				jedis.del(info.getEntityKey() + "." + i.getObjectKey() + "." + info.identifierToString(identifier));
+			}
+			
+			//MongoDB
+			DBCollection collection = MongoDBFactory.getInstance().getMongoDatabase().getCollection(info.getEntityKey());
+			BasicDBObject query = new BasicDBObject();
+			query.put("identifier", info.identifierToString(identifier));
+			collection.remove(query);
+		} catch (WrongIdentifierException | NoOrganizedEntityException e) {
+			e.printStackTrace();
+		} finally {
+			jedis.close();
 		}
 	}
 	
+	
+	
 	/**
-	 * Get all locally cached entities by class
+	 * Get all entities of class T from the database
+	 * 
+	 * @param <T>
+	 * @param clazz
+	 * @return
+	 */
+	public <T> List<T> getAllEntities(Class<T> clazz) {
+		try {
+			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
+			
+			DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
+			DBCursor cur = mongodb.getCollection(info.getEntityKey()).find();
+			
+			List<T> entityList = new ArrayList<T>();
+			for(DBObject obj : cur) {
+				entityList.add(getEntity(clazz, info.stringToIdentifier((String) obj.get("identifier"))));
+			}
+			
+			return entityList;
+		} catch (NoOrganizedEntityException e) {
+			e.printStackTrace();
+		}
+		
+		return new ArrayList<T>();
+	}
+	
+	
+	
+	/**
+	 * Gets all locally cached entities by class
 	 * 
 	 * @param clazz
 	 * @return
@@ -182,72 +169,71 @@ public final class DataAccessManager {
 		return new ArrayList<Object>();
 	}
 	
+	
+	
 	/**
-	 * Used to initialize all OrganizedObject fields in a {@link OrganizedSuperentity}.
-	 * Calls the constructor of this object after initialization
+	 * Gets a organized entity by it's class and identifier.
+	 * DOES NOT TEST if object with this id exists. Creates a new
+	 * one if so.
 	 * 
-	 * @param clazz The class to build
-	 * @param constrValues The values of the non database constructor of this OrganizedSuperentity
-	 * @return
+	 * @param <T>
+	 * @param clazz
+	 * @param id
+	 * @return found class or a newly created
+	 * 
 	 */
-	public Object buildOrganizedSuperentity(Class<?> clazz, Object... constrValues) {
-		// Build object with reflection
+	@SuppressWarnings("unchecked")
+	public <T> T getEntity(Class<T> clazz, Object identifier) {
 		try {
-			Class<?>[] constrClasses = new Class<?>[constrValues.length];
-			int i = 0;
-			for(Object o : constrValues) {
-				constrClasses[i] = o.getClass();
-				i++;
-			}
+			//Test if clazz is a correct OrganizedEntity
+			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
+			info.getIdentifierClass();
+			info.identifierToString(identifier);	
 			
-			Constructor<?> constr = clazz.getConstructor(constrClasses);
-			Object obj = constr.newInstance(constrValues);
-			
-			for(Field field : obj.getClass().getDeclaredFields()) {
-				if(field.getAnnotation(OrganizedObject.class) != null) {
-					OrganizedEntity entAnn = clazz.getAnnotation(OrganizedEntity.class);
-					OrganizedObject objAnn = field.getAnnotation(OrganizedObject.class); 
-				
-					DataKey dataKey = new DataKey(entAnn.entityKey(), objAnn.objectKey(), UUID.randomUUID());
-					OrganizationType orgType = OrganizationType.NONE;
-					
-					Constructor<?> fConstr = null;
-					if(field.getType() == OrganizedSingleDataObject.class) {
-						fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-					}
-					if(field.getType() == OrganizedListDataObject.class) {
-						fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-					}
-					if(field.getType() == OrganizedMapDataObject.class) {
-						fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-					}	
-					
-					DefaultDataConverter<?> conv = null; 
-
-					if(objAnn.listClass() == Object.class && objAnn.mapKeyClass() == Object.class) {
-						conv = new DefaultDataConverter<>(objAnn.singleClass());
-					} else
-						if(objAnn.listClass() != Object.class) {
-							conv = new DefaultDataConverter<>(ArrayList.class, objAnn.listClass());
-						} else 
-							if(objAnn.mapKeyClass() != Object.class) {
-								conv = new DefaultDataConverter<>(HashMap.class, objAnn.mapKeyClass(), objAnn.mapValClass());
-							}
-					
-					OrganizedDataObject<?> orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
-					field.setAccessible(true);
-					field.set(obj, orgObj);
-					field.setAccessible(false);
+			//Check if this entity already exists in local cache an return it if so
+			if(managedEntities.containsKey(clazz)) {
+				if(managedEntities.get(clazz).containsKey(identifier)) {
+					return (T) managedEntities.get(clazz).get(identifier);
 				}
-				
-				return obj;
-			}
-		} catch(Exception e) {
+			} 
 			
+			//Object does not exist -> Create it
+			Object orgEntity = createEntity(clazz, identifier);
+			
+			//Save created object to local cache
+			if(managedEntities.containsKey(clazz)) {
+				managedEntities.get(clazz).put(identifier, orgEntity);
+			} else {
+				Map<Object, Object> map = new HashMap<Object, Object>();
+				map.put(identifier, orgEntity);
+				managedEntities.put(clazz, map);
+			}
+		
+			return (T) orgEntity;
+		} catch (NoOrganizedEntityException | WrongIdentifierException e) {
+			e.printStackTrace();
 		}
 		
 		return null;
 	}
+	
+	
+	
+	/**
+	 * Gets a organized entity from local cache by it's class and identifier
+	 * 
+	 * @param <T>
+	 * @param clazz
+	 * @param identfier
+	 * @return the found object or null
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T getCachedEntity(Class<T> clazz, Object identfier) {
+		if(managedEntities.containsKey(clazz)) return (T) managedEntities.get(clazz).get(identfier);
+		return null;
+	}
+
+	
 	
 	/**
 	 * Builds an OrgnizedEntity object for the given identifier.
@@ -258,120 +244,104 @@ public final class DataAccessManager {
 	 * @param organizedDataType
 	 * @return builded object or null if clazz is no {@link com.lostkingdoms.db.organization.OrganizedEntity}
 	 */
-	private Object buildOrganizedEntity(Class<?> clazz, Object identifier) {		
+	private Object createEntity(Class<?> clazz, Object identifier) {		
 		// Build object with reflection
 		try {
+			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
+			
 			Constructor<?> constr = clazz.getConstructor();
-			LKLogger.getInstance().debug("OrgEntity creation: Constructor: " + constr, LogType.OBJECT_CREATION);
-			
-			Object obj = constr.newInstance();
-			LKLogger.getInstance().debug("OrgEntity creation: New instance: " + obj, LogType.OBJECT_CREATION);
-			
-			boolean identifierSet = false;
-			for(Field field : obj.getClass().getDeclaredFields()) {
-				LKLogger.getInstance().debug("OrgEntity creation: Field found: " + field.getName(), LogType.FIELD_INITIALIZATION);
-				if(field.getAnnotation(OrganizedObject.class) != null) {
-					LKLogger.getInstance().debug("OrgEntity creation: Field has OrgObj Annotation: " + field.getName(), LogType.FIELD_INITIALIZATION);
-					OrganizedEntity entAnn = clazz.getAnnotation(OrganizedEntity.class);
-					OrganizedObject objAnn = field.getAnnotation(OrganizedObject.class); 
-					LKLogger.getInstance().debug("OrgEntity creation: Annotations: " + entAnn + "   " + objAnn, LogType.FIELD_INITIALIZATION);
-
-					DataKey dataKey = new DataKey(entAnn.entityKey(), objAnn.objectKey(), identifier);
-					LKLogger.getInstance().debug("OrgEntity creation: DataKey created: " + dataKey, LogType.FIELD_INITIALIZATION);
-
-					OrganizationType orgType = objAnn.organizationType();
-					LKLogger.getInstance().debug("OrgEntity creation: OrganizationType: " + orgType, LogType.FIELD_INITIALIZATION);
-
-					Constructor<?> fConstr = null;
-					if(field.getType() == OrganizedSingleDataObject.class) {
-						LKLogger.getInstance().debug("OrgEntity creation: OrganizedSingleDataObject", LogType.FIELD_INITIALIZATION);
-						fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-					}
-					if(field.getType() == OrganizedListDataObject.class) {
-						LKLogger.getInstance().debug("OrgEntity creation: OrganizedListDataObject", LogType.FIELD_INITIALIZATION);
-						fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-					}
-					if(field.getType() == OrganizedMapDataObject.class) {
-						LKLogger.getInstance().debug("OrgEntity creation: OrganizedMapDataObject", LogType.FIELD_INITIALIZATION);
-						fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-					}	
-
-					LKLogger.getInstance().debug("OrgEntity creation: OrganizedObjectConstr: " + fConstr, LogType.FIELD_INITIALIZATION);
-
-					DefaultDataConverter<?> conv = null; 
-
-					if(objAnn.listClass() == Object.class && objAnn.mapKeyClass() == Object.class) {
-						conv = new DefaultDataConverter<>(objAnn.singleClass());
-					} else
-						if(objAnn.listClass() != Object.class) {
-							conv = new DefaultDataConverter<>(ArrayList.class, objAnn.listClass());
-						} else 
-							if(objAnn.mapKeyClass() != Object.class) {
-								conv = new DefaultDataConverter<>(HashMap.class, objAnn.mapKeyClass(), objAnn.mapValClass());
-							}
-
-					LKLogger.getInstance().debug("OrgEntity creation: DataConverter: " + conv, LogType.FIELD_INITIALIZATION);
-
-					OrganizedDataObject<?> orgObj = null;
-					if(objAnn.defaultBooleanValue() != "" ) {
-						fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class, Object.class);
-						orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv, Boolean.parseBoolean(objAnn.defaultBooleanValue()));
-					} else
-					if(objAnn.defaultEnumValue() != "") {
-						fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class, Object.class);
-						if(objAnn.singleClass().isEnum()) {	
-							try {
-								Field f = objAnn.singleClass().getDeclaredField("$VALUES");
-								f.setAccessible(true);
-								Enum<?>[] values = (Enum<?>[]) f.get(null);
-								for(Enum<?> e : values) {
-									if(e.name().equalsIgnoreCase(objAnn.defaultEnumValue())) orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv, e);
-								}
-							} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-								e.printStackTrace();
-							}
-						} else {
-							//TODO ERROR
-							return null;
-						}
-						
-					} else {
-						orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
-					}
-					 
-					field.setAccessible(true);
-					field.set(obj, orgObj);
-					field.setAccessible(false);
-				} 
-				
-				//Initialize identifier field
-				if(field.getAnnotation(Identifier.class) != null) {
-					field.setAccessible(true);
-					field.set(obj, identifier);
-					field.setAccessible(false);
-					identifierSet = true;
-				}
+			Object obj = constr.newInstance();	
+			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
+				initializeField(info, i, obj, identifier);
 			}
-			//Set identifier in superclass
-			if(!identifierSet) {
-				for(Field field : obj.getClass().getSuperclass().getDeclaredFields()) {
-					//Initialize identifier field
-					if(field.getAnnotation(Identifier.class) != null) {
-						field.setAccessible(true);
-						field.set(obj, identifier);
-						field.setAccessible(false);
-					}
-				}
-			}
+			
+			Field id = info.getIdentifierField();
+			id.setAccessible(true);
+			id.set(obj, identifier);
+			id.setAccessible(false);
 			
 			return obj;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | NoSuchMethodException | SecurityException  
-				 e) {
+				| InvocationTargetException | NoSuchMethodException | SecurityException | NoOrganizedEntityException 
+				| WrongMethodUseException e) {
 			e.printStackTrace();
 		} 
 		
 		return null;
 	}
+	
+	
+	
+	/**
+	 * Util method you HAVE TO put at first place in every more then one argument constructor
+	 * of a {@link OrganizedEntity} or {@link OrganizedSuperentity}
+	 * 
+	 * @param obj
+	 * @param identifier
+	 */
+	public void initializeEntityFields(Object obj, Object identifier) {
+		try {
+			OrganizedEntityInformation info = new OrganizedEntityInformation(obj.getClass());
+			
+			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
+				initializeField(info, i, obj, identifier);
+			}
+			
+			Field id = info.getIdentifierField();
+			id.setAccessible(true);
+			id.set(obj, identifier);
+			id.setAccessible(false);
+		} catch (NoOrganizedEntityException | NoSuchMethodException | SecurityException | IllegalArgumentException 
+				| IllegalAccessException | InstantiationException | InvocationTargetException | WrongMethodUseException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	/**
+	 * Private util method to initialize a {@link OrganizedObject} field
+	 * 
+	 * @param eInfo
+	 * @param oInfo
+	 * @param obj
+	 * @param identifier
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws InvocationTargetException
+	 * @throws WrongMethodUseException
+	 */
+	private void initializeField(OrganizedEntityInformation eInfo, OrganizedObjectInformation oInfo, Object obj, Object identifier) 
+			throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, WrongMethodUseException {
+		Field f = oInfo.getField();
+		
+		DataKey dataKey = new DataKey(eInfo.getEntityKey(), oInfo.getObjectKey(), identifier);
+		OrganizationType orgType = oInfo.getOrganizationType();
+		
+		Constructor<?> fConstr = null;
+		DefaultDataConverter<?> conv = null;
+		if(oInfo.getDataObjectClass() == OrganizedSingleDataObject.class) {
+			fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
+			conv = new DefaultDataConverter<>(oInfo.getSingleClass());
+		}
+		else if(oInfo.getDataObjectClass() == OrganizedListDataObject.class) {
+			fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
+			conv = new DefaultDataConverter<>(oInfo.getSingleClass(), oInfo.getListClass());
+		}
+		else if(oInfo.getDataObjectClass() == OrganizedMapDataObject.class) { 
+			fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
+			conv = new DefaultDataConverter<>(oInfo.getSingleClass(), oInfo.getMapClass().getLeft(), oInfo.getMapClass().getRight());
+		}
+		
+		OrganizedDataObject<?> orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
+	
+		f.setAccessible(true);
+		f.set(obj, orgObj);
+		f.setAccessible(false);
+	}
+	
 	
 }

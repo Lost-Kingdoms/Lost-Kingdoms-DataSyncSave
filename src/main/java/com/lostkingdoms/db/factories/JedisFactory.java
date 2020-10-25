@@ -1,4 +1,4 @@
-package com.lostkingdoms.db.database;
+package com.lostkingdoms.db.factories;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;

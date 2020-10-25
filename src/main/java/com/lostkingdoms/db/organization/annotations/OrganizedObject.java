@@ -21,11 +21,12 @@ public @interface OrganizedObject {
 	String objectKey();
 	
 	/**
-	 * How this {@link OrganizedObject} should be organized
+	 * How this {@link OrganizedObject} should be organized.
+	 * Default is BOTH
 	 * 
 	 * @return
 	 */
-	OrganizationType organizationType();
+	OrganizationType organizationType() default OrganizationType.BOTH;
 	
 	/**
 	 * If this {@link OrganizedObject} is a {@link OrganizedSingleDataObject} you HAVE TO
@@ -58,23 +59,6 @@ public @interface OrganizedObject {
 	 * @return
 	 */
 	Class<?> mapValClass() default Object.class;
-	
-	/**
-	 * If this {@link OrganizedObject} is a {@link OrganizedSingleDataObject} which 
-	 * represents a boolean you can define a default value here which will be
-	 * set if there is no value in the global cache or database (OPTIONAL)
-	 * 
-	 * @return
-	 */
-	String defaultBooleanValue() default "";
-	
-	/**
-	 * If this {@link OrganizedObject} is a {@link OrganizedSingleDataObject} which 
-	 * represents an enum you can define a default value here which will be
-	 * set if there is no value in the global cache or database (OPTIONAL)
-	 * @return
-	 */
-	String defaultEnumValue() default "";
 	
 	/**
 	 * If this {@link OrganizedObject} is not part of a {@link OrganizedEntity}
