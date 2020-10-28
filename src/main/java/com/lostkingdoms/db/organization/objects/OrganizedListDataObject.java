@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
 import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
@@ -32,15 +33,21 @@ import redis.clients.jedis.Jedis;
 public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayList<T>> {
 
 	/**
+	 * The {@link DefaultListDataConverter} that will be used for serialization and
+	 * deserialization.
+	 */
+	private DefaultListDataConverter<T> converter;
+	
+	/**
 	 * Constructor for {@link OrganizedListDataObject}.
 	 * This represent a list of objects that should be organized.
 	 * 
 	 * @param dataKey The objects {@link DataKey}
 	 * @param organizationType The objects {@link OrganizationType}
 	 */
-	public OrganizedListDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<ArrayList<T>> converter) {
+	public OrganizedListDataObject(DataKey dataKey, OrganizationType organizationType, DefaultListDataConverter<T> converter) {
 		setDataKey(dataKey);
-		setDataConverter(converter);
+		this.converter = converter;
 		setOrganizationType(organizationType);
 		setData(new ArrayList<T>());
 	}
@@ -73,7 +80,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			// Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+				DefaultListDataConverter<T> converter = this.converter;
 
 				//Convert the data
 				ArrayList<T> newData = converter.convertFromDatabase(dataString);
@@ -108,7 +115,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			//Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+				DefaultListDataConverter<T> converter = this.converter;
 
 				//Convert the data
 				ArrayList<T> newData = converter.convertFromDatabase(dataString);
@@ -156,7 +163,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+			DefaultListDataConverter<T> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(list);
@@ -246,7 +253,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+			DefaultListDataConverter<T> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(temp);
@@ -335,7 +342,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				DataKey dataKey = getDataKey();
 				
 				//Get the data converter
-				AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+				DefaultListDataConverter<T> converter = this.converter;
 				
 				//Conversion to redis and mongoDB
 				String dataString = converter.convertToDatabase(temp);
@@ -498,7 +505,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			AbstractDataConverter<ArrayList<T>> converter = getDataConverter();
+			DefaultListDataConverter<T> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(temp);

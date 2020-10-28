@@ -3,6 +3,7 @@ package com.lostkingdoms.db.organization.objects;
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
 import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.logger.LKLogger;
@@ -26,6 +27,12 @@ import redis.clients.jedis.Jedis;
 public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {	
 	
 	/**
+	 * The {@link DefaultDataConverter} that will be used for serialization and
+	 * deserialization.
+	 */
+	private DefaultDataConverter<T> converter;
+	
+	/**
 	 * Constructor for {@link OrganizedSingleDataObject}.
 	 * This represent a single object that should be organized (no list, map).
 	 * 
@@ -34,7 +41,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	 */
 	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<T> converter) {
 		setDataKey(dataKey);
-		setDataConverter(converter);
+		this.converter = converter;
 		setOrganizationType(organizationType);
 	}
 	
@@ -66,7 +73,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			// Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				AbstractDataConverter<T> converter = getDataConverter();
+				DefaultDataConverter<T> converter = this.converter;
 				
 				//Convert the data
 				T newData = converter.convertFromDatabase(dataString);
@@ -102,7 +109,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			//Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				AbstractDataConverter<T> converter = getDataConverter();
+				DefaultDataConverter<T> converter = this.converter;
 				
 				//Convert the data
 				T newData = converter.convertFromDatabase(dataString);
@@ -150,7 +157,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			AbstractDataConverter<T> converter = getDataConverter();
+			DefaultDataConverter<T> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(data);

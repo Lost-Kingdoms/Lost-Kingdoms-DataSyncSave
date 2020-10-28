@@ -23,12 +23,6 @@ public abstract class OrganizedDataObject<T> {
 	private OrganizationType organizationType;
 	
 	/**
-	 * The {@link AbstractDataConverter} that will be used for serialization and
-	 * deserialization.
-	 */
-	private AbstractDataConverter<T> converter;
-	
-	/**
 	 * THE data map object 
 	 */
 	private T data;
@@ -87,25 +81,6 @@ public abstract class OrganizedDataObject<T> {
 	 */
 	protected void setOrganizationType(OrganizationType organizationType) {
 		if(this.organizationType == null) this.organizationType = organizationType;
-	}
-	
-	/**
-	 * Set the {@link IDataConverter} for this object.
-	 * Can NOT replace old {@link IDataConverter}
-	 * 
-	 * @param converter
-	 */
-	protected void setDataConverter(AbstractDataConverter<T> converter) {
-		if(this.converter == null) this.converter = converter;
-	}
-	
-	/**
-	 * Get this objects {@link IDataConverter}
-	 * 
-	 * @return The converter
-	 */
-	protected AbstractDataConverter<T> getDataConverter() {
-		return this.converter;
 	}
 	
 	/**

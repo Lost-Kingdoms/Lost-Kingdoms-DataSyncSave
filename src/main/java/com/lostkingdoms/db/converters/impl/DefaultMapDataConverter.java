@@ -1,0 +1,128 @@
+package com.lostkingdoms.db.converters.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.lostkingdoms.db.DataOrganizationManager;
+
+public class DefaultMapDataConverter<K, V> {
+
+	/**
+	 * The generic class of the first map type argument or the list type
+	 */
+	private Class<K> genericClass1;
+	
+	/**
+	 * The generic class of the second map type argument
+	 */
+	private Class<V> genericClass2;
+	
+	
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param thisClass
+	 */
+	public DefaultMapDataConverter(Class<K> genericClass1, Class<V> genericClass2) {
+		this.genericClass1 = genericClass1;
+		this.genericClass2 = genericClass2;
+	}
+	
+
+	@SuppressWarnings({ "unchecked", "serial" })
+	public HashMap<K, V> convertFromDatabase(String s) {
+		//The Gson instance
+		Gson gson = new Gson();
+
+		//Manager
+		DataOrganizationManager dataOrganizationManager = DataOrganizationManager.getInstance();
+		
+		//Convert object from json
+		Object obj = null;
+
+		if(dataOrganizationManager.hasDataConverter(this.genericClass1) && dataOrganizationManager.hasDataConverter(this.genericClass2)) {
+			obj = gson.fromJson(s, new TypeToken<HashMap<String, String>>() {}.getType());
+		}
+		else if(dataOrganizationManager.hasDataConverter(this.genericClass1)) {
+			obj = gson.fromJson(s, new TypeToken<HashMap<String, V>>() {}.getType());
+		}
+		else if(dataOrganizationManager.hasDataConverter(this.genericClass2)) {
+			obj = gson.fromJson(s, new TypeToken<HashMap<K, String>>() {}.getType());
+		} 
+		else {
+			obj = gson.fromJson(s, new TypeToken<HashMap<K, V>>() {}.getType());
+		}
+	
+		HashMap<K, V> newMap = new HashMap<K, V>();
+
+		if(dataOrganizationManager.hasDataConverter(this.genericClass1) && dataOrganizationManager.hasDataConverter(this.genericClass2)) {
+			for(Entry<String, String> entry: ((Map<String, String>)obj).entrySet()) {
+				newMap.put((K) dataOrganizationManager.getDataConverter(genericClass1).convertFromDatabase(entry.getKey())
+						, (V) dataOrganizationManager.getDataConverter(genericClass2).convertFromDatabase(entry.getValue()));
+			}
+		}
+		else if(dataOrganizationManager.hasDataConverter(this.genericClass1)) {
+			for(Entry<String, V> entry: ((Map<String, V>)obj).entrySet()) {
+				newMap.put((K) dataOrganizationManager.getDataConverter(genericClass1).convertFromDatabase(entry.getKey())
+						, entry.getValue());
+			}
+		}
+		else if(dataOrganizationManager.hasDataConverter(this.genericClass2)) {
+			for(Entry<K, String> entry: ((Map<K, String>)obj).entrySet()) {
+				newMap.put(entry.getKey()
+						, (V) dataOrganizationManager.getDataConverter(genericClass2).convertFromDatabase(entry.getValue()));
+			}
+		} 
+		
+		if(newMap.size() > 0) return newMap;
+
+		return (HashMap<K, V>) obj;
+
+	}
+
+	public String convertToDatabase(HashMap<K, V> map) {
+		//The Gson instance
+		Gson gson = new Gson();
+
+		//Manager
+		DataOrganizationManager dataOrganizationManager = DataOrganizationManager.getInstance();
+		
+		
+		Object data = map;
+		//Data is map
+		//If Objects in Map are OrganizedEntities convert them to it's identifier 
+		//Otherwise do nothing
+		Map<String, String> newMap = new HashMap<String, String>();
+
+		//Check every map element one by one and convert it
+		for(Entry<K, V> entry : map.entrySet()) {
+			if(dataOrganizationManager.hasDataConverter(entry.getKey().getClass())
+					&& dataOrganizationManager.hasDataConverter(entry.getValue().getClass())) {
+				newMap.put(dataOrganizationManager.getDataConverter(entry.getKey().getClass()).convertToDatabase(entry.getKey())
+						, dataOrganizationManager.getDataConverter(entry.getValue().getClass()).convertToDatabase(entry.getValue()));
+			} 
+			else if(dataOrganizationManager.hasDataConverter(entry.getKey().getClass())) {
+				newMap.put(dataOrganizationManager.getDataConverter(entry.getKey().getClass()).convertToDatabase(entry.getKey())
+							, gson.toJson(entry.getValue()));
+			} 
+			else if(dataOrganizationManager.hasDataConverter(entry.getValue().getClass())) {
+					newMap.put(gson.toJson(entry.getKey())
+								, dataOrganizationManager.getDataConverter(entry.getValue().getClass()).convertToDatabase(entry.getValue()));
+			} 
+			else {
+				break;
+				}
+		}
+
+		if(newMap.size() > 0) data = newMap;
+
+		return gson.toJson(data);
+	}
+	
+}

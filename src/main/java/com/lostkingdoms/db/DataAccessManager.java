@@ -8,7 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.checkerframework.checker.units.qual.degrees;
+
+import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultMapDataConverter;
 import com.lostkingdoms.db.exceptions.NoOrganizedEntityException;
 import com.lostkingdoms.db.exceptions.WrongIdentifierException;
 import com.lostkingdoms.db.exceptions.WrongMethodUseException;
@@ -343,22 +348,26 @@ public final class DataAccessManager {
 		OrganizationType orgType = oInfo.getOrganizationType();
 		
 		Constructor<?> fConstr = null;
-		DefaultDataConverter<?> conv = null;
+		OrganizedDataObject<?> orgObj = null;
 		if(oInfo.getDataObjectClass() == OrganizedSingleDataObject.class) {
 			fConstr = OrganizedSingleDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-			conv = new DefaultDataConverter<>(oInfo.getSingleClass());
+			DefaultDataConverter<?> conv = new DefaultDataConverter<>(oInfo.getSingleClass());
+			
+			orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
 		}
 		else if(oInfo.getDataObjectClass() == OrganizedListDataObject.class) {
-			fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-			conv = new DefaultDataConverter<>(oInfo.getSingleClass(), oInfo.getListClass());
+			fConstr = OrganizedListDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultListDataConverter.class);
+			DefaultListDataConverter<?> conv = new DefaultListDataConverter<>(oInfo.getListClass());
+
+			orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
 		}
 		else if(oInfo.getDataObjectClass() == OrganizedMapDataObject.class) { 
-			fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultDataConverter.class);
-			conv = new DefaultDataConverter<>(oInfo.getSingleClass(), oInfo.getMapClass().getLeft(), oInfo.getMapClass().getRight());
+			fConstr = OrganizedMapDataObject.class.getConstructor(DataKey.class, OrganizationType.class, DefaultMapDataConverter.class);
+			DefaultMapDataConverter<?, ?> conv = new DefaultMapDataConverter<>(oInfo.getMapClass().getLeft(), oInfo.getMapClass().getRight());
+			
+			orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
 		}
 		
-		OrganizedDataObject<?> orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
-	
 		f.setAccessible(true);
 		f.set(obj, orgObj);
 		f.setAccessible(false);

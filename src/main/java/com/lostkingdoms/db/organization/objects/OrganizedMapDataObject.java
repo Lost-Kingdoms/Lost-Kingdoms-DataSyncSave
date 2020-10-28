@@ -9,6 +9,8 @@ import org.bson.types.ObjectId;
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
+import com.lostkingdoms.db.converters.impl.DefaultMapDataConverter;
 import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
@@ -30,15 +32,21 @@ import redis.clients.jedis.Jedis;
 public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K, V>> {
 
 	/**
+	 * The {@link DefaultMapDataConverter} that will be used for serialization and
+	 * deserialization.
+	 */
+	private DefaultMapDataConverter<K, V> converter;
+	
+	/**
 	 * Constructor for {@link OrganizedMapDataObject}.
 	 * This represent a map of objects that should be organized.
 	 * 
 	 * @param dataKey The objects {@link DataKey}
 	 * @param organizationType The objects {@link OrganizationType}
 	 */
-	public OrganizedMapDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<HashMap<K, V>> converter) {
+	public OrganizedMapDataObject(DataKey dataKey, OrganizationType organizationType, DefaultMapDataConverter<K, V> converter) {
 		setDataKey(dataKey);
-		setDataConverter(converter);
+		this.converter = converter;
 		setOrganizationType(organizationType);
 		setData(new HashMap<K, V>());
 	}
@@ -71,7 +79,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			// Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
+				DefaultMapDataConverter<K, V> converter = this.converter;
 
 				//Convert the data
 				HashMap<K, V> newData = converter.convertFromDatabase(dataString);
@@ -106,7 +114,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			//Check if data is null
 			if(dataString != null) {
 				//Get the converter to convert the data 
-				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
+				DefaultMapDataConverter<K, V> converter = this.converter;
 
 				//Convert the data
 				HashMap<K, V> newData = converter.convertFromDatabase(dataString);
@@ -149,7 +157,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
+			DefaultMapDataConverter<K, V> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(map);
@@ -228,6 +236,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 		//Updated list (clone)
 		@SuppressWarnings("unchecked")
 		HashMap<K, V> temp = (HashMap<K, V>) getData().clone();
+		temp.remove(key);
 		temp.put(key, value);
 		
 		try {
@@ -240,7 +249,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			DataKey dataKey = getDataKey();
 			
 			//Get the data converter
-			AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
+			DefaultMapDataConverter<K, V> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(temp);
@@ -329,7 +338,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				DataKey dataKey = getDataKey();
 				
 				//Get the data converter
-				AbstractDataConverter<HashMap<K, V>> converter = getDataConverter();
+				DefaultMapDataConverter<K, V> converter = this.converter;
 				
 				//Conversion to redis and mongoDB
 				String dataString = converter.convertToDatabase(temp);
