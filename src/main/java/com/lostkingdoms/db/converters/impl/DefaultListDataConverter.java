@@ -1,11 +1,13 @@
 package com.lostkingdoms.db.converters.impl;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.lostkingdoms.db.DataOrganizationManager;
@@ -14,7 +16,7 @@ import com.lostkingdoms.db.converters.AbstractDataConverter;
 public class DefaultListDataConverter<T> {
 
 	Class<T> genericClass;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -35,10 +37,15 @@ public class DefaultListDataConverter<T> {
 		//Convert object from json
 		Object obj = null;
 		
+		
 		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
 			obj = gson.fromJson(s, new TypeToken<ArrayList<String>>() {}.getType());
 		} else {
-			obj = gson.fromJson(s, new TypeToken<ArrayList<T>>() {}.getType());
+			TypeToken<T> token = TypeToken.of(this.genericClass);
+			Type type = new TypeToken<ArrayList<T>>() {}
+				.where(new TypeParameter<T>() {}, token)
+				.getType();
+			obj = gson.fromJson(s, type);
 		}
 
 		ArrayList<T> newList = new ArrayList<T>();

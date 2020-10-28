@@ -1,11 +1,13 @@
 package com.lostkingdoms.db.converters.impl;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.lostkingdoms.db.DataOrganizationManager;
@@ -50,13 +52,27 @@ public class DefaultMapDataConverter<K, V> {
 			obj = gson.fromJson(s, new TypeToken<HashMap<String, String>>() {}.getType());
 		}
 		else if(dataOrganizationManager.hasDataConverter(this.genericClass1)) {
-			obj = gson.fromJson(s, new TypeToken<HashMap<String, V>>() {}.getType());
+			TypeToken<V> tokenV = TypeToken.of(this.genericClass2);
+			Type type = new TypeToken<HashMap<String, V>>() {}
+			.where(new TypeParameter<V>() {}, tokenV)
+			.getType();
+			obj = gson.fromJson(s, type);
 		}
 		else if(dataOrganizationManager.hasDataConverter(this.genericClass2)) {
-			obj = gson.fromJson(s, new TypeToken<HashMap<K, String>>() {}.getType());
+			TypeToken<K> tokenK = TypeToken.of(this.genericClass1);
+			Type type = new TypeToken<HashMap<K, String>>() {}
+			.where(new TypeParameter<K>() {}, tokenK)
+			.getType();
+			obj = gson.fromJson(s, type);
 		} 
 		else {
-			obj = gson.fromJson(s, new TypeToken<HashMap<K, V>>() {}.getType());
+			TypeToken<K> tokenK = TypeToken.of(this.genericClass1);
+			TypeToken<V> tokenV = TypeToken.of(this.genericClass2);
+			Type type = new TypeToken<HashMap<K, V>>() {}
+				.where(new TypeParameter<K>() {}, tokenK)
+				.where(new TypeParameter<V>() {}, tokenV)
+				.getType();
+			obj = gson.fromJson(s, type);
 		}
 	
 		HashMap<K, V> newMap = new HashMap<K, V>();

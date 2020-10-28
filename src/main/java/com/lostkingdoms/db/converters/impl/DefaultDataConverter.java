@@ -40,7 +40,8 @@ public final class DefaultDataConverter<T> {
 			return ((AbstractDataConverter<T>)dataOrganizationManager.getDataConverter(this.genericClass)).convertFromDatabase(s);
 		}
 	
-		return gson.fromJson(s, new TypeToken<T>() {}.getType());
+		TypeToken<T> token = TypeToken.of(this.genericClass);
+		return gson.fromJson(s, token.getType());
 	}
 
 	@SuppressWarnings("unchecked")
