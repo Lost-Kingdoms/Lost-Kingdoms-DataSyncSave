@@ -17,8 +17,11 @@ public class NoIdentifierError extends Error {
 		this.reason = clazz;
 	}
 	
+	@Override
 	public String toString() {
 		return "NoIdentifierError: Class" + reason.getSimpleName() + " has no specified identifier!";
 	}
+
+	
 	
 }

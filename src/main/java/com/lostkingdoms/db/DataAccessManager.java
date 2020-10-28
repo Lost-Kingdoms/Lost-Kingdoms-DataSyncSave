@@ -86,12 +86,33 @@ public final class DataAccessManager {
 		return false;
 	}
 	
-//	
-//	
-//	public boolean isInDatabase() {
-//		//TODO
-//	}
-//	
+	
+	
+	/**
+	 * Checks if an clazz with given identifier exists in database
+	 * 
+	 * @param clazz
+	 * @param identifier
+	 * @return
+	 */
+	public boolean isInDatabase(Class<?> clazz, Object identifier) {
+		try {
+			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
+			
+			DB db = MongoDBFactory.getInstance().getMongoDatabase();
+			DBCollection collection = db.getCollection(info.getEntityKey());
+			
+			BasicDBObject obj = new BasicDBObject();
+			obj.put("identifier", info.identifierToString(identifier));
+			if(collection.find(obj).count() == 0) return false;
+			return true;
+		} catch (NoOrganizedEntityException | WrongIdentifierException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	
 
 	/**
@@ -145,7 +166,7 @@ public final class DataAccessManager {
 			
 			List<T> entityList = new ArrayList<T>();
 			for(DBObject obj : cur) {
-				entityList.add(getEntity(clazz, info.stringToIdentifier((String) obj.get("identifier"))));
+				entityList.add((T) getEntity(clazz, info.stringToIdentifier((String) obj.get("identifier"))));
 			}
 			
 			return entityList;
@@ -183,7 +204,7 @@ public final class DataAccessManager {
 	 * 
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T getEntity(Class<T> clazz, Object identifier) {
+	public <T> T getEntity(Class<?> clazz, Object identifier) {
 		try {
 			//Test if clazz is a correct OrganizedEntity
 			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);

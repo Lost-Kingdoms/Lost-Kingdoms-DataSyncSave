@@ -25,8 +25,6 @@ import redis.clients.jedis.Jedis;
  */
 public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {	
 	
-	private Object defaultValue = null;
-	
 	/**
 	 * Constructor for {@link OrganizedSingleDataObject}.
 	 * This represent a single object that should be organized (no list, map).
@@ -41,28 +39,11 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	}
 	
 	/**
-	 * Constructor for {@link OrganizedSingleDataObject}.
-	 * This represent a single object that should be organized (no list, map).
-	 * 
-	 * @param dataKey The objects {@link DataKey}
-	 * @param organizationType The objects {@link OrganizationType}
-	 * @param converter The converter of this object
-	 * @param the default value of this object
-	 */
-	public OrganizedSingleDataObject(DataKey dataKey, OrganizationType organizationType, DefaultDataConverter<T> converter, Object defaultValue) {
-		setDataKey(dataKey);
-		setDataConverter(converter);
-		setOrganizationType(organizationType);
-		this.defaultValue = defaultValue;
-	}
-	
-	/**
 	 * The public getter method for the data.
 	 * Checks consistency of data with global cache and DB.
 	 * 
 	 * @return the data of this {@link OrganizedSingleDataObject}
 	 */
-	@SuppressWarnings("unchecked")
 	public T get() {	
 		Jedis jedis = JedisFactory.getInstance().getJedis();	
 		DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
@@ -71,18 +52,15 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			long newTimestamp = System.currentTimeMillis() - 1;
 			
 			short hashslot = getDataKey().getHashslot();
-			LKLogger.getInstance().debug("SingleDataGet Hashslot: " + hashslot, LogType.GET);
 			hashslot = 100;
 			
 			// If data is up-to-date
-			LKLogger.getInstance().debug("SingleDataGet Timestamp: " + DataOrganizationManager.getInstance().getLastUpdated(hashslot) + "   " + getTimestamp(), LogType.GET);
-			if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0) {
+			if((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0) || getOrganizationType() == OrganizationType.NONE) {
 				return getData();
 			}
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
-			LKLogger.getInstance().debug("SingleDataGet RedisData: " + getDataKey().getRedisKey() + "   " + jedis.get(getDataKey().getRedisKey()), LogType.GET);
 			String dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
@@ -122,7 +100,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			
 			//Check if data is null
-			LKLogger.getInstance().debug("SingleDataGet MongoData: " + dataKey.getMongoDBValue(), LogType.GET);
 			if(dataString != null) {
 				//Get the converter to convert the data 
 				AbstractDataConverter<T> converter = getDataConverter();
@@ -147,10 +124,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				return getData();
 			}
 			
-			//Data does not exist yet (check for default value)
-			if(defaultValue != null) {
-				return (T) defaultValue;
-			}
 			return null;
 		} finally {
 			jedis.close();
@@ -175,19 +148,16 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			//Get the data key
 			DataKey dataKey = getDataKey();
-			LKLogger.getInstance().debug("SingleDataSet: DataKey " + dataKey , LogType.ALL);
 			
 			//Get the data converter
 			AbstractDataConverter<T> converter = getDataConverter();
-			LKLogger.getInstance().debug("SingleDataSet: DataConverter " + converter , LogType.ALL);
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(data);
-			LKLogger.getInstance().debug("SingleDataSet: DataString " + dataString , LogType.ALL);
 			if(dataString == null) {
 				return;
 			}
-
+			
 			//Update to redis
 			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
 				if(dataString.equals("")) {

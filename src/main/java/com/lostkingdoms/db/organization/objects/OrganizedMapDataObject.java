@@ -219,7 +219,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 		hashslot = 101;
 		
 		if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
-			setData((HashMap<K, V>) getMap());
+			setData(new HashMap<K, V>(getMap()));
 		}
 		
 		Jedis jedis = JedisFactory.getInstance().getJedis();	
@@ -307,7 +307,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 		short hashslot = getDataKey().getHashslot();
 		
 		if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
-			setData((HashMap<K, V>) getMap());
+			setData(new HashMap<K, V>(getMap()));
 		}
 		
 		Jedis jedis = JedisFactory.getInstance().getJedis();	

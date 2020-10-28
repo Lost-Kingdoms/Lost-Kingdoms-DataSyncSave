@@ -153,16 +153,18 @@ public final class DefaultDataConverter<T> extends AbstractDataConverter<T> {
 		//Otherwise do nothing
 		if(data instanceof List<?>) {
 			//Check if list elements have registered converter
-			if(dataOrganizationManager.hasDataConverter(((List<?>)data).get(0).getClass())) {
-				List<String> newList = new ArrayList<String>();
+			if(((List<?>)data).size() != 0) {
+				if(dataOrganizationManager.hasDataConverter(((List<?>)data).get(0).getClass())) {
+					List<String> newList = new ArrayList<String>();
 
-				AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(((List<?>)data).get(0).getClass());
-				//Convert list elements one by one and add them to a new list
-				for(Object o : ((List<?>)data)) {
-					newList.add(converter.convertToDatabase(o));
+					AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(((List<?>)data).get(0).getClass());
+					//Convert list elements one by one and add them to a new list
+					for(Object o : ((List<?>)data)) {
+						newList.add(converter.convertToDatabase(o));
+					}
+
+					data = newList;
 				}
-
-				data = newList;
 			}
 		}
 
@@ -171,7 +173,7 @@ public final class DefaultDataConverter<T> extends AbstractDataConverter<T> {
 		//Otherwise do nothing
 		if(data instanceof Map<?, ?>) {
 			Map<String, String> newMap = new HashMap<String, String>();
-			
+
 			//Check every map element one by one and convert it
 			for(Entry<?, ?> entry : ((Map<?, ?>)data).entrySet()) {
 				if(dataOrganizationManager.hasDataConverter(entry.getKey().getClass())
@@ -194,7 +196,6 @@ public final class DefaultDataConverter<T> extends AbstractDataConverter<T> {
 			if(newMap.size() > 0) data = newMap;
 
 		}
-		
 		return gson.toJson(data);
 	}
 

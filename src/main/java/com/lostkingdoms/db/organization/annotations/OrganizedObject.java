@@ -18,7 +18,7 @@ public @interface OrganizedObject {
 	 * 
 	 * @return
 	 */
-	String objectKey();
+	String objectKey() default "";
 	
 	/**
 	 * How this {@link OrganizedObject} should be organized.

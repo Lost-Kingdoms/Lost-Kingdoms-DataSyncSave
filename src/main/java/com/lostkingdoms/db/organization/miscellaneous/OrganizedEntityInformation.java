@@ -21,7 +21,7 @@ public class OrganizedEntityInformation {
 	
 	public OrganizedEntityInformation(Class<?> clazz) throws NoOrganizedEntityException {
 		if(clazz.getAnnotation(OrganizedEntity.class) == null &&
-				clazz.getAnnotation(OrganizedSuperentity.class) != null)
+				clazz.getAnnotation(OrganizedSuperentity.class) == null)
 			throw new NoOrganizedEntityException(clazz);
 		this.clazz = clazz;
 	}
@@ -39,7 +39,7 @@ public class OrganizedEntityInformation {
 						if(f.getType() != String.class && f.getType() != UUID.class && !f.getType().isEnum())
 							throw new WrongIdentifierClassError(currentClass, f.getType());
 						
-						return f.getClass();
+						return f.getType();
 					}
 				}
 			}
@@ -48,7 +48,7 @@ public class OrganizedEntityInformation {
 			else currentClass = null;
 		}
 		
-		throw new NoIdentifierError(clazz.getClass());
+		throw new NoIdentifierError(clazz);
 	}
 	
 	/**
@@ -68,7 +68,7 @@ public class OrganizedEntityInformation {
 			else currentClass = null;
 		}
 
-		throw new NoIdentifierError(clazz.getClass());
+		throw new NoIdentifierError(clazz);
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class OrganizedEntityInformation {
 			else currentClass = null;
 		}
 
-		throw new NoIdentifierError(clazz.getClass());
+		throw new NoIdentifierError(clazz);
 	}
 	
 	/**
@@ -130,8 +130,10 @@ public class OrganizedEntityInformation {
 	 */
 	public String getEntityKey() {
 		OrganizedEntity orgEnt = clazz.getAnnotation(OrganizedEntity.class);
-		
-		if(orgEnt.entityKey() != "") return orgEnt.entityKey();
+		if(orgEnt != null) {
+			if(orgEnt.entityKey() != "") return orgEnt.entityKey();
+			
+		}
 		return clazz.getSimpleName().toLowerCase();
 	}
 	
@@ -153,23 +155,22 @@ public class OrganizedEntityInformation {
 	}
 	
 	/**
-	 * Converts a string represantation of an identifier of this object back to an object
+	 * Converts a string representation of an identifier of this object back to an object
 	 * 
 	 * @param identifierString
 	 * @return
 	 */
 	public Object stringToIdentifier(String identifierString) {
 		Class<?> idClass = getIdentifierClass();
-
-		if(idClass == UUID.class) return UUID.fromString(identifierString);
-		if(idClass == String.class) return identifierString;
+		if(idClass == UUID.class) return UUID.fromString(identifierString.replace("\"", ""));
+		if(idClass == String.class) return identifierString.replace("\"", "");
 		if(idClass.isEnum()) {	
 			try {
 				Field f = idClass.getDeclaredField("$VALUES");
 				f.setAccessible(true);
 				Enum<?>[] values = (Enum<?>[]) f.get(null);
 				for(Enum<?> e : values) {
-					if(e.name().equalsIgnoreCase(identifierString)) return e;
+					if(e.name().equalsIgnoreCase(identifierString.replace("\"", ""))) return e;
 				}
 			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
