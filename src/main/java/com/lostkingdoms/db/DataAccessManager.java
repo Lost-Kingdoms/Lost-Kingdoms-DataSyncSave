@@ -368,7 +368,11 @@ public final class DataAccessManager {
 			throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, WrongMethodUseException {
 		Field f = oInfo.getField();
 		
-		if(f.get(obj) != null) return;
+		f.setAccessible(true);
+		if(f.get(obj) != null) {
+			f.setAccessible(false);
+			return;
+		}
 		
 		DataKey dataKey = new DataKey(eInfo.getEntityKey(), oInfo.getObjectKey(), identifier);
 		OrganizationType orgType = oInfo.getOrganizationType();
@@ -394,8 +398,7 @@ public final class DataAccessManager {
 			
 			orgObj = (OrganizedDataObject<?>) fConstr.newInstance(dataKey, orgType, conv);
 		}
-		
-		f.setAccessible(true);
+
 		f.set(obj, orgObj);
 		f.setAccessible(false);
 	}
