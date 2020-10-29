@@ -40,12 +40,9 @@ public final class OrganizedEntityConverter<T> extends AbstractDataConverter<T> 
 		try {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(getThisClass());
 			
-			for(Field f : data.getClass().getDeclaredFields()) {
-				if(f.getAnnotation(Identifier.class) != null) {
-					f.setAccessible(true);
-					return info.identifierToString(f.get(data));
-				}
-			}
+			Field f = info.getIdentifierField();
+			f.setAccessible(true);
+			return info.identifierToString(f.get(data));
 		} catch (NoOrganizedEntityException | IllegalArgumentException 
 				| IllegalAccessException | WrongIdentifierException e) {
 			e.printStackTrace();
