@@ -15,7 +15,13 @@ import com.lostkingdoms.db.organization.annotations.OrganizedEntity;
 import com.lostkingdoms.db.organization.annotations.OrganizedObject;
 import com.lostkingdoms.db.organization.annotations.OrganizedSuperentity;
 
-public class OrganizedEntityInformation {
+/**
+ * Holds all information which are needed for handling a {@link OrganizedEntity}
+ * 
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
+ */
+public final class OrganizedEntityInformation {
 
 	private Class<?> clazz;
 	

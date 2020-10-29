@@ -1,9 +1,9 @@
 package com.lostkingdoms.db.converters;
 
 /**
- * An abstract DataConverter
+ * An abstract DataConverter. Used as template for custom converters
  * 
- * @author Tim
+ * @author Tim Küchler (https://github.com/TimK1998)
  *
  * @param <T>
  */

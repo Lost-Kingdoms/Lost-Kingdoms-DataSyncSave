@@ -22,7 +22,7 @@ import redis.clients.jedis.Jedis;
  * intitialisation. 
  * Manages the registration of {@link OrganizedEntity}s and {@link AbstractDataConverter}s
  * 
- * @author Tim
+ * @author Tim Küchler (https://github.com/TimK1998)
  *
  */
 public final class DataOrganizationManager {

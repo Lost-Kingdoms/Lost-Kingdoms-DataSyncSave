@@ -76,6 +76,11 @@ public final class DataKey {
 		return identifierToString();
 	}
 	
+	/**
+	 * Converts the identifier to a {@link String}
+	 * 
+	 * @return 
+	 */
 	private String identifierToString() {
 		Class<?> idClass = this.identifier.getClass();
 		

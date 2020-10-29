@@ -38,7 +38,7 @@ import redis.clients.jedis.Jedis;
 /**
  * Manager that handles the creation, destruction and query of all organized data types and entities
  * 
- * @author Tim
+ * @author Tim Küchler (https://github.com/TimK1998)
  *
  */
 public final class DataAccessManager {

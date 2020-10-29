@@ -18,6 +18,8 @@ import redis.clients.jedis.Jedis;
  * The base class for single data which should be saved or synced.
  * (no list, map) 
  *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  * @param <T> the class of the data that should be synced
  */
 public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {	

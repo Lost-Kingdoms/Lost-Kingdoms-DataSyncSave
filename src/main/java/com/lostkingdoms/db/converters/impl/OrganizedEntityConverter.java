@@ -13,7 +13,7 @@ import com.lostkingdoms.db.organization.miscellaneous.OrganizedEntityInformation
 /**
  * A converter for {@link OrganizedEntity}s
  * 
- * @author Tim
+ * @author Tim Küchler (https://github.com/TimK1998)
  *
  * @param <T>
  */

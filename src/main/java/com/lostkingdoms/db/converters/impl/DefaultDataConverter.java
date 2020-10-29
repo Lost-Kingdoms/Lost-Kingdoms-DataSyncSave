@@ -4,11 +4,12 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
+import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
 
 /**
- * The default data converter.
+ * The default data converter for {@link OrganizedSingleDataObject}
  * 
- * @author Tim
+ * @author Tim Küchler (https://github.com/TimK1998)
  *
  * @param <T>
  */

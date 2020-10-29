@@ -10,6 +10,12 @@ import com.lostkingdoms.db.organization.objects.OrganizedListDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedMapDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
 
+/**
+ * Marks a field as a {@link OrganizedObject}
+ * 
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
+ */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OrganizedObject {

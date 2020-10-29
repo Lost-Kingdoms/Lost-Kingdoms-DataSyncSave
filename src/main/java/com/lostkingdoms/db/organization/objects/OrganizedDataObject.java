@@ -3,6 +3,13 @@ package com.lostkingdoms.db.organization.objects;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 
+/**
+ * Abstract class of all OrganizedDataObjects
+ * 
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
+ * @param <T>
+ */
 public abstract class OrganizedDataObject<T> {
 
 	/**

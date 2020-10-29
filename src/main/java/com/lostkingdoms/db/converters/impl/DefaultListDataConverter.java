@@ -9,7 +9,15 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
+import com.lostkingdoms.db.organization.objects.OrganizedListDataObject;
 
+/**
+ * The default data converter for {@link OrganizedListDataObject}
+ * 
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
+ * @param <T>
+ */
 public class DefaultListDataConverter<T> {
 
 	Class<T> genericClass;

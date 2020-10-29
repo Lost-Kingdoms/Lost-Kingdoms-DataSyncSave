@@ -17,9 +17,22 @@ import com.lostkingdoms.db.organization.objects.OrganizedListDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedMapDataObject;
 import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
 
-public class OrganizedObjectInformation {
+/**
+ * Holds all information which are needed for handling a {@link OrganizedEntity}
+ * 
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
+ */
+public final class OrganizedObjectInformation {
 
+	/**
+	 * The {@link Field} which is represented
+	 */
 	private Field objectField;
+	
+	/**
+	 * The {@link OrganizedEntity} class this field is declared in
+	 */
 	private Class<?> buildClass;
 	
 	public OrganizedObjectInformation(Field objectField, Class<?> buildClass) throws NoOrganizedObjectException {

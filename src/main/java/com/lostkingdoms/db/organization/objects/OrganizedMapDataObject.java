@@ -24,6 +24,8 @@ import redis.clients.jedis.Jedis;
  * The base class for data which should be saved or synced as a map.
  * Provides basic map functions. Later it is planned to fully implement {@link Map} interface.
  *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  * @param <K, V> the classes of the data that should be synced
  */
 public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<HashMap<K, V>> {

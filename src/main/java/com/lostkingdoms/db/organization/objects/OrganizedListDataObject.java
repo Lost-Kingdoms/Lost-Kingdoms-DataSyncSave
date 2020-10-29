@@ -24,7 +24,7 @@ import redis.clients.jedis.Jedis;
  * An {@link OrganizedDataObject} which represents an {@link ArrayList} of type T.
  * Provides basic list methods. Later it is planned to fully implement {@link List} interface
  * 
- * @author Tim
+ * @author Tim Küchler (https://github.com/TimK1998)
  *
  * @param <T>
  */

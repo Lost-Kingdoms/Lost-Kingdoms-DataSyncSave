@@ -12,7 +12,7 @@ import com.google.common.io.Files;
 /**
  * Name: LKLogger Description: Logger class to handle outputs
  *
- * @author FPetersen Date: 24.07.2019
+ * @author FPetersen
  */
 public class LKLogger {
 

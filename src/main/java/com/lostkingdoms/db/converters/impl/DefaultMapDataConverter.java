@@ -9,7 +9,16 @@ import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.lostkingdoms.db.DataOrganizationManager;
+import com.lostkingdoms.db.organization.objects.OrganizedMapDataObject;
 
+/**
+ * Default data converter for {@link OrganizedMapDataObject}
+ * 
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
+ * @param <K> key
+ * @param <V> value
+ */
 public class DefaultMapDataConverter<K, V> {
 
 	/**
