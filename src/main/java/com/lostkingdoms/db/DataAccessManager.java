@@ -159,6 +159,7 @@ public final class DataAccessManager {
 	 * @param clazz
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> List<T> getAllEntities(Class<T> clazz) {
 		try {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);

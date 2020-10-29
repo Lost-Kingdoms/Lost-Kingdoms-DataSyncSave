@@ -2,7 +2,6 @@ package com.lostkingdoms.db.factories;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
@@ -27,7 +26,7 @@ public final class JedisFactory {
 	 * Initiates the jedis connection and pool.
 	 */
     public JedisFactory() {
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        //JedisPoolConfig poolConfig = new JedisPoolConfig();
         
         jedisPool = new JedisPool(
             "127.0.0.1",

@@ -29,7 +29,7 @@ public final class DefaultDataConverter<T> {
 		this.genericClass = genericClass;
 	}
 
-	@SuppressWarnings({ "unchecked", "serial" })
+	@SuppressWarnings({ "unchecked"})
 	public T convertFromDatabase(String s) {
 		if(s == null) return null;
 		

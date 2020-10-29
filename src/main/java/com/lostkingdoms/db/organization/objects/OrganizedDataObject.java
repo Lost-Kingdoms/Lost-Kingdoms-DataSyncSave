@@ -1,6 +1,5 @@
 package com.lostkingdoms.db.organization.objects;
 
-import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 

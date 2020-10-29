@@ -7,8 +7,6 @@ import java.util.List;
 import org.bson.types.ObjectId;
 
 import com.lostkingdoms.db.DataOrganizationManager;
-import com.lostkingdoms.db.converters.AbstractDataConverter;
-import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
 import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
