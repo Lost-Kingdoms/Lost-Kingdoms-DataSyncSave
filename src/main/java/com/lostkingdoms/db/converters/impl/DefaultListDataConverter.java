@@ -60,7 +60,7 @@ public class DefaultListDataConverter<T> {
 				String[] sub = o.split(":");
 				
 				AbstractDataConverter<?> converter = null;
-				if(sub[1] != null) {
+				if(sub.length != 1) {
 					try {
 						converter = dataOrganizationManager.getDataConverter(Class.forName(sub[1]));
 					} catch (ClassNotFoundException e) {
