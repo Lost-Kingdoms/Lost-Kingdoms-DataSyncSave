@@ -368,6 +368,8 @@ public final class DataAccessManager {
 			throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, WrongMethodUseException {
 		Field f = oInfo.getField();
 		
+		if(f.get(obj) != null) return;
+		
 		DataKey dataKey = new DataKey(eInfo.getEntityKey(), oInfo.getObjectKey(), identifier);
 		OrganizationType orgType = oInfo.getOrganizationType();
 		if(none) orgType = OrganizationType.NONE;

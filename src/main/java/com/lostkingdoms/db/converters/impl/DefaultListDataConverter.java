@@ -57,8 +57,20 @@ public class DefaultListDataConverter<T> {
 
 		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
 			for(String o : ((List<String>)obj)) {
-				AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(this.genericClass);
-				newList.add((T) converter.convertFromDatabase(o));
+				String[] sub = o.split(":");
+				
+				AbstractDataConverter<?> converter = null;
+				if(sub[1] != null) {
+					try {
+						converter = dataOrganizationManager.getDataConverter(Class.forName(sub[1]));
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
+					}
+				} else {
+					converter = dataOrganizationManager.getDataConverter(this.genericClass);
+				}
+				
+				newList.add((T) converter.convertFromDatabase(sub[0]));
 			}
 		}
 
@@ -80,10 +92,24 @@ public class DefaultListDataConverter<T> {
 			if(dataOrganizationManager.hasDataConverter(t.get(0).getClass())) {
 				List<String> newList = new ArrayList<String>();
 
-				AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(t.get(0).getClass());
+				
 				//Convert list elements one by one and add them to a new list
 				for(T o : t) {
-					newList.add(converter.convertToDatabase(o));
+					AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(t.getClass());
+					
+					Class<?> clazz = t.getClass();
+					boolean superList = false;
+					while(clazz.getSuperclass() != null) {
+						if(clazz.getSuperclass() == this.genericClass) {
+							superList = true;
+						}
+						clazz = clazz.getSuperclass();
+					}
+					if(superList) {
+						newList.add(converter.convertToDatabase(o) + ":" + t.getClass().getName());
+					} else {
+						newList.add(converter.convertToDatabase(o));
+					}	
 				}
 
 				data = newList;
