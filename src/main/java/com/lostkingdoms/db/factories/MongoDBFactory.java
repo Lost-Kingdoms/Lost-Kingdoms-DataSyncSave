@@ -39,7 +39,7 @@ public final class MongoDBFactory {
 		}
 		
 		//TODO Read db name
-		DATABASE_NAME = "Lostkingdoms";
+		DATABASE_NAME = "lostkingdoms";
 	}
 	
 	/**
@@ -57,6 +57,12 @@ public final class MongoDBFactory {
 	 * @return the database
 	 */
 	public DB getMongoDatabase() {
+		if(this.mongoClient == null) return null;
+		try {
+			mongoClient.getAddress();
+		} catch(Exception e) {
+			return null;
+		}
 		return getMongoClient().getDB(DATABASE_NAME);
 	}
 	

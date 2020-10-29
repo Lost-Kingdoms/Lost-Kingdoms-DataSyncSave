@@ -8,9 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.checkerframework.checker.units.qual.degrees;
-
-import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultMapDataConverter;
@@ -278,7 +275,7 @@ public final class DataAccessManager {
 			Constructor<?> constr = clazz.getConstructor();
 			Object obj = constr.newInstance();	
 			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
-				initializeField(info, i, obj, identifier);
+				initializeField(info, i, obj, identifier, false);
 			}
 			
 			Field id = info.getIdentifierField();
@@ -310,7 +307,7 @@ public final class DataAccessManager {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(obj.getClass());
 			
 			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
-				initializeField(info, i, obj, identifier);
+				initializeField(info, i, obj, identifier, false);
 			}
 			
 			Field id = info.getIdentifierField();
@@ -323,6 +320,32 @@ public final class DataAccessManager {
 		}
 	}
 	
+	
+	
+	/**
+	 * Util method to intialize fields of {@link OrganizedEntity}. 
+	 * 
+	 * @param obj
+	 * @param identifier
+	 * @param none true, if you want to not save this object in any way
+	 */
+	public void initializeEntityFields(Object obj, Object identifier, boolean none) {
+		try {
+			OrganizedEntityInformation info = new OrganizedEntityInformation(obj.getClass());
+			
+			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
+				initializeField(info, i, obj, identifier, none);
+			}
+			
+			Field id = info.getIdentifierField();
+			id.setAccessible(true);
+			id.set(obj, identifier);
+			id.setAccessible(false);
+		} catch (NoOrganizedEntityException | NoSuchMethodException | SecurityException | IllegalArgumentException 
+				| IllegalAccessException | InstantiationException | InvocationTargetException | WrongMethodUseException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	
 	/**
@@ -340,12 +363,13 @@ public final class DataAccessManager {
 	 * @throws InvocationTargetException
 	 * @throws WrongMethodUseException
 	 */
-	private void initializeField(OrganizedEntityInformation eInfo, OrganizedObjectInformation oInfo, Object obj, Object identifier) 
+	private void initializeField(OrganizedEntityInformation eInfo, OrganizedObjectInformation oInfo, Object obj, Object identifier, boolean none) 
 			throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, WrongMethodUseException {
 		Field f = oInfo.getField();
 		
 		DataKey dataKey = new DataKey(eInfo.getEntityKey(), oInfo.getObjectKey(), identifier);
 		OrganizationType orgType = oInfo.getOrganizationType();
+		if(none) orgType = OrganizationType.NONE;
 		
 		Constructor<?> fConstr = null;
 		OrganizedDataObject<?> orgObj = null;

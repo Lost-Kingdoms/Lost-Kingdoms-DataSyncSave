@@ -166,7 +166,13 @@ public class OrganizedEntityInformation {
 		if(idClass == String.class) return identifierString.replace("\"", "");
 		if(idClass.isEnum()) {	
 			try {
-				Field f = idClass.getDeclaredField("ENUM$VALUES");
+				Field f = null;
+				try {
+					f = idClass.getDeclaredField("ENUM$VALUES");
+				} catch(NoSuchFieldException e) {
+					f = idClass.getDeclaredField("$VALUES");
+				}
+				
 				f.setAccessible(true);
 				Enum<?>[] values = (Enum<?>[]) f.get(null);
 				for(Enum<?> e : values) {

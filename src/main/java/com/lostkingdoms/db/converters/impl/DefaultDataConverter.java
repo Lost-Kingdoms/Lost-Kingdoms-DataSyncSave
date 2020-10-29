@@ -31,6 +31,8 @@ public final class DefaultDataConverter<T> {
 
 	@SuppressWarnings({ "unchecked", "serial" })
 	public T convertFromDatabase(String s) {
+		if(s == null) return null;
+		
 		//The Gson instance
 		Gson gson = new Gson();
 
@@ -46,6 +48,8 @@ public final class DefaultDataConverter<T> {
 
 	@SuppressWarnings("unchecked")
 	public String convertToDatabase(T t) {
+		if(t == null) return null;
+		
 		Object data = t;
 
 		//The Gson instance

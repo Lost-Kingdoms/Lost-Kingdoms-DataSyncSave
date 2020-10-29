@@ -3,6 +3,7 @@ package com.lostkingdoms.db.factories;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * Provider class for {@link Jedis Pool} and it's {@link Jedis} instances
@@ -49,7 +50,11 @@ public final class JedisFactory {
      * @return A {@link Jedis} instance
      */
     public Jedis getJedis() {
-    	return jedisPool.getResource();
+    	try {
+    		return jedisPool.getResource();
+    	} catch (JedisConnectionException e) {
+    		return null;
+    	}
     }
 
     /**

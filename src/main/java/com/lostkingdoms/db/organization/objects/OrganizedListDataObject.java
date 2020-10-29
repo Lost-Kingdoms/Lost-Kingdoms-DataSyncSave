@@ -61,6 +61,10 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 		Jedis jedis = JedisFactory.getInstance().getJedis();	
 		DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
 		
+		if(mongodb == null || jedis == null) {
+			return Collections.unmodifiableList(getData());
+		}
+		
 		try {
 			long newTimestamp = System.currentTimeMillis() - 1;
 			
@@ -75,7 +79,8 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
-			String dataString = jedis.get(getDataKey().getRedisKey());
+			String dataString = null;
+			if(jedis != null) dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
 			if(dataString != null) {
@@ -102,15 +107,17 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			// Data in global cache is null
 			// Try to get data from MongoDB
 			DataKey dataKey = getDataKey();
+			
+			if(mongodb != null) {
+				DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
+				BasicDBObject query = new BasicDBObject();
+				query.put("identifier", dataKey.getMongoDBIdentifier());
 
-			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
-			BasicDBObject query = new BasicDBObject();
-			query.put("identifier", dataKey.getMongoDBIdentifier());
-
-			DBObject object = collection.findOne(query);
-			if(object != null) {
-				dataString = (String) object.get(dataKey.getMongoDBValue());
-			}
+				DBObject object = collection.findOne(query);
+				if(object != null) {
+					dataString = (String) object.get(dataKey.getMongoDBValue());
+				}
+			}	
 
 			//Check if data is null
 			if(dataString != null) {
@@ -132,7 +139,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				updateTimestamp(newTimestamp);
 
 				//Push data to Redis
-				jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+				if(jedis != null) jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
 
 				return Collections.unmodifiableList(getData());
 			}
@@ -140,7 +147,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			//Data does not exist yet
 			return getData();
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	
@@ -172,7 +179,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				if(dataString.equals("")) {
 					jedis.del(dataKey.getRedisKey());
 				} else {
@@ -181,7 +188,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to MongoDB
-			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+			if((getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) && mongoDB != null) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				//Test if object already exists
@@ -210,14 +217,14 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Publish to other servers via redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 			}
 			
 			//Set the local data
 			setData(list);
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	
@@ -262,7 +269,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				if(dataString.equals("")) {
 					jedis.del(dataKey.getRedisKey());
 				} else {
@@ -271,7 +278,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to MongoDB
-			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+			if((getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) && mongoDB != null) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				//Test if object already exists
@@ -300,14 +307,14 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Publish to other servers via redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 			}
 			
 			//Set the local data
 			setData(temp);
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	
@@ -351,7 +358,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				}
 				
 				//Update to redis
-				if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 					if(dataString.equals("")) {
 						jedis.del(dataKey.getRedisKey());
 					} else {
@@ -360,7 +367,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				}
 				
 				//Update to MongoDB
-				if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+				if((getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) && mongoDB != null) {	
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 					
 					//Test if object already exists
@@ -389,14 +396,14 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				}
 				
 				//Publish to other servers via redis
-				if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+				if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 					jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 				}
 				
 				//Set the local data
 				setData(temp);
 			} finally {
-				jedis.close();
+				if(jedis != null) jedis.close();
 			}
 		}
 	}
@@ -418,10 +425,10 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			DataKey dataKey = getDataKey();
 			
 			//Delete from Redis
-			jedis.del(dataKey.getRedisKey());
+			if(jedis != null) jedis.del(dataKey.getRedisKey());
 			
 			//Delete from MongoDB
-			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+			if((getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) && mongoDB != null) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				BasicDBObject query = new BasicDBObject();
@@ -437,14 +444,14 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Publish to other servers via redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 			}
 			
 			//Set the local data
 			setData(new ArrayList<T>());
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	
@@ -514,7 +521,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				if(dataString.equals("")) {
 					jedis.del(dataKey.getRedisKey());
 				} else {
@@ -523,7 +530,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Update to MongoDB
-			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+			if((getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) && mongoDB != null) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				//Test if object already exists
@@ -552,14 +559,14 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			}
 			
 			//Publish to other servers via redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 			}
 			
 			//Set the local data
 			setData(temp);
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	

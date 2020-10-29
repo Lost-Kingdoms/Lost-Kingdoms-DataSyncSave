@@ -1,13 +1,9 @@
 package com.lostkingdoms.db.organization.objects;
 
 import com.lostkingdoms.db.DataOrganizationManager;
-import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
-import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
 import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
-import com.lostkingdoms.db.logger.LKLogger;
-import com.lostkingdoms.db.logger.LogType;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 import com.lostkingdoms.db.sync.DataSyncMessage;
@@ -55,6 +51,10 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		Jedis jedis = JedisFactory.getInstance().getJedis();	
 		DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
 		
+		if(mongodb == null || jedis == null) {
+			return getData();
+		}
+		
 		try {
 			long newTimestamp = System.currentTimeMillis() - 1;
 			
@@ -68,7 +68,8 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
-			String dataString = jedis.get(getDataKey().getRedisKey());
+			String dataString = null;
+			if(jedis != null) dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
 			if(dataString != null) {
@@ -96,15 +97,17 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			// Try to get data from MongoDB
 			DataKey dataKey = getDataKey();
 		
-			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
-			BasicDBObject query = new BasicDBObject();
-			query.put("identifier", dataKey.getMongoDBIdentifier());
-			
-			DBObject object = collection.findOne(query);
-			if(object != null) {
-				dataString = (String) object.get(dataKey.getMongoDBValue());
-			} 
-			
+			if(mongodb != null) {
+				DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
+				BasicDBObject query = new BasicDBObject();
+				query.put("identifier", dataKey.getMongoDBIdentifier());
+				
+				DBObject object = collection.findOne(query);
+				
+				if(object != null) {
+					dataString = (String) object.get(dataKey.getMongoDBValue());
+				} 
+			}
 			
 			//Check if data is null
 			if(dataString != null) {
@@ -133,7 +136,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			return null;
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	
@@ -166,7 +169,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			}
 			
 			//Update to redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				if(dataString.equals("")) {
 					jedis.del(dataKey.getRedisKey());
 				} else {
@@ -175,7 +178,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			}
 			
 			//Update to MongoDB
-			if(getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {	
+			if((getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) && mongoDB != null) {	
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				//Test if object already exists
@@ -204,14 +207,14 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			}
 			
 			//Publish to other servers via redis
-			if(getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			if((getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) && jedis != null) {
 				jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL.getBytes(), new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 			}
 
 			//Set the local data
 			setData(data);
 		} finally {
-			jedis.close();
+			if(jedis != null) jedis.close();
 		}
 	}
 	
