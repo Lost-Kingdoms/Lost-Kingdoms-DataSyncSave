@@ -95,9 +95,9 @@ public class DefaultListDataConverter<T> {
 				
 				//Convert list elements one by one and add them to a new list
 				for(T o : t) {
-					AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(t.getClass());
+					AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(o.getClass());
 					
-					Class<?> clazz = t.getClass();
+					Class<?> clazz = o.getClass();
 					boolean superList = false;
 					while(clazz.getSuperclass() != null) {
 						if(clazz.getSuperclass() == this.genericClass) {
@@ -106,7 +106,7 @@ public class DefaultListDataConverter<T> {
 						clazz = clazz.getSuperclass();
 					}
 					if(superList) {
-						newList.add(converter.convertToDatabase(o) + ":" + t.getClass().getName());
+						newList.add(converter.convertToDatabase(o) + ":" + o.getClass().getName());
 					} else {
 						newList.add(converter.convertToDatabase(o));
 					}	
