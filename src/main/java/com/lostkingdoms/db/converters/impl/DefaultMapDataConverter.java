@@ -121,7 +121,7 @@ public class DefaultMapDataConverter<K, V> {
 		//Data is map
 		//If Objects in Map are OrganizedEntities convert them to it's identifier 
 		//Otherwise do nothing
-		Map<String, String> newMap = new HashMap<String, String>();
+		Map<Object, Object> newMap = new HashMap<Object, Object>();
 
 		//Check every map element one by one and convert it
 		for(Entry<K, V> entry : map.entrySet()) {
@@ -132,10 +132,10 @@ public class DefaultMapDataConverter<K, V> {
 			} 
 			else if(dataOrganizationManager.hasDataConverter(entry.getKey().getClass())) {
 				newMap.put(dataOrganizationManager.getDataConverter(entry.getKey().getClass()).convertToDatabase(entry.getKey())
-							, gson.toJson(entry.getValue()));
+							, entry.getValue());
 			} 
 			else if(dataOrganizationManager.hasDataConverter(entry.getValue().getClass())) {
-					newMap.put(gson.toJson(entry.getKey())
+					newMap.put(entry.getKey()
 								, dataOrganizationManager.getDataConverter(entry.getValue().getClass()).convertToDatabase(entry.getValue()));
 			} 
 			else {

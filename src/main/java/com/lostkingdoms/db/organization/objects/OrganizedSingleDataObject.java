@@ -192,19 +192,30 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					query = new BasicDBObject();
 					query.put("identifier", dataKey.getMongoDBIdentifier());
 
-					BasicDBObject newDoc = new BasicDBObject();
-					newDoc.put(dataKey.getMongoDBValue(), dataString);
-					
-					BasicDBObject update = new BasicDBObject();
-					update.put("$set", newDoc);
-					
+					BasicDBObject update;
+					if(dataString.equals("")) {
+						BasicDBObject newDoc = new BasicDBObject();
+						newDoc.put(dataKey.getMongoDBValue(), "");
+
+						update = new BasicDBObject();
+						update.put("$unset", newDoc);
+					} else {
+						BasicDBObject newDoc = new BasicDBObject();
+						newDoc.put(dataKey.getMongoDBValue(), dataString);
+
+						update = new BasicDBObject();
+						update.put("$set", newDoc);
+					}
+
 					collection.update(query, update);
 				}  else {
-					BasicDBObject create = new BasicDBObject();
-					create.put("identifier", dataKey.getMongoDBIdentifier());
-					create.put(dataKey.getMongoDBValue(), dataString);
-					
-					collection.insert(create);
+					if(!dataString.equals("")) {
+						BasicDBObject create = new BasicDBObject();
+						create.put("identifier", dataKey.getMongoDBIdentifier());
+						create.put(dataKey.getMongoDBValue(), dataString);
+
+						collection.insert(create);
+					}
 				}
 			}
 			

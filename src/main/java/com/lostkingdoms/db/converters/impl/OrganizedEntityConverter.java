@@ -37,6 +37,7 @@ public final class OrganizedEntityConverter<T> extends AbstractDataConverter<T> 
 
 	@Override
 	public String convertToDatabase(Object data) {
+		if(data == null) return "";
 		try {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(getThisClass());
 			

@@ -49,7 +49,7 @@ public final class DefaultDataConverter<T> {
 
 	@SuppressWarnings("unchecked")
 	public String convertToDatabase(T t) {
-		if(t == null) return null;
+		if(t == null) return "";
 		
 		Object data = t;
 

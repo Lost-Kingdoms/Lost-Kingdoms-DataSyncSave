@@ -21,6 +21,7 @@ import com.lostkingdoms.db.organization.annotations.OrganizedObject;
 import com.lostkingdoms.db.organization.annotations.OrganizedSuperentity;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
+import com.lostkingdoms.db.organization.miscellaneous.NullObj;
 import com.lostkingdoms.db.organization.miscellaneous.OrganizedEntityInformation;
 import com.lostkingdoms.db.organization.miscellaneous.OrganizedObjectInformation;
 import com.lostkingdoms.db.organization.objects.OrganizedDataObject;
@@ -273,8 +274,16 @@ public final class DataAccessManager {
 		try {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
 			
-			Constructor<?> constr = clazz.getConstructor();
-			Object obj = constr.newInstance();	
+			
+			Object obj;
+			try {
+				Constructor<?> constr = clazz.getConstructor(NullObj.class); 
+				obj = constr.newInstance((NullObj)null);	
+			} catch(NoSuchMethodException e) {
+				Constructor<?> constr = clazz.getConstructor();
+				obj = constr.newInstance();	
+			}
+			
 			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
 				initializeField(info, i, obj, identifier, false);
 			}
@@ -303,7 +312,7 @@ public final class DataAccessManager {
 	 * @param obj
 	 * @param identifier
 	 */
-	public void initializeEntityFields(Object obj, Object identifier) {
+	public void initializeEntityFields(Object obj, Object identifier) {		
 		try {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(obj.getClass());
 			
@@ -315,6 +324,14 @@ public final class DataAccessManager {
 			id.setAccessible(true);
 			id.set(obj, identifier);
 			id.setAccessible(false);
+			
+			if(managedEntities.containsKey(obj.getClass())) {
+				managedEntities.get(obj.getClass()).put(identifier, obj);
+			} else {
+				Map<Object, Object> map = new HashMap<Object, Object>();
+				map.put(identifier, obj);
+				managedEntities.put(obj.getClass(), map);
+			}
 		} catch (NoOrganizedEntityException | NoSuchMethodException | SecurityException | IllegalArgumentException 
 				| IllegalAccessException | InstantiationException | InvocationTargetException | WrongMethodUseException e) {
 			e.printStackTrace();
@@ -342,6 +359,14 @@ public final class DataAccessManager {
 			id.setAccessible(true);
 			id.set(obj, identifier);
 			id.setAccessible(false);
+			
+			if(managedEntities.containsKey(obj.getClass())) {
+				managedEntities.get(obj.getClass()).put(identifier, obj);
+			} else {
+				Map<Object, Object> map = new HashMap<Object, Object>();
+				map.put(identifier, obj);
+				managedEntities.put(obj.getClass(), map);
+			}
 		} catch (NoOrganizedEntityException | NoSuchMethodException | SecurityException | IllegalArgumentException 
 				| IllegalAccessException | InstantiationException | InvocationTargetException | WrongMethodUseException e) {
 			e.printStackTrace();

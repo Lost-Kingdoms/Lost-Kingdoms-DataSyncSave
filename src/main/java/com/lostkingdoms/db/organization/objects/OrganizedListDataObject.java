@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.bson.types.ObjectId;
-
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.impl.DefaultListDataConverter;
 import com.lostkingdoms.db.factories.JedisFactory;
@@ -430,7 +428,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", new ObjectId(dataKey.getMongoDBIdentifier()));
+				query.put("identifier", dataKey.getMongoDBIdentifier());
 
 				BasicDBObject newDoc = new BasicDBObject();
 				newDoc.put(dataKey.getMongoDBValue(), "");
