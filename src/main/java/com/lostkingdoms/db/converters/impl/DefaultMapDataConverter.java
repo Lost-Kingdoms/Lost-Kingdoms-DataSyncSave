@@ -82,7 +82,7 @@ public class DefaultMapDataConverter<K, V> {
 			obj = gson.fromJson(s, type);
 		}
 	
-		HashMap<K, V> newMap = new HashMap<K, V>();
+		HashMap<K, V> newMap = new HashMap<>();
 
 		if(dataOrganizationManager.hasDataConverter(this.genericClass1) && dataOrganizationManager.hasDataConverter(this.genericClass2)) {
 			for(Entry<String, String> entry: ((Map<String, String>)obj).entrySet()) {
@@ -121,7 +121,7 @@ public class DefaultMapDataConverter<K, V> {
 		//Data is map
 		//If Objects in Map are OrganizedEntities convert them to it's identifier 
 		//Otherwise do nothing
-		Map<Object, Object> newMap = new HashMap<Object, Object>();
+		Map<Object, Object> newMap = new HashMap<>();
 
 		//Check every map element one by one and convert it
 		for(Entry<K, V> entry : map.entrySet()) {

@@ -59,7 +59,7 @@ public final class OrganizedObjectInformation {
 	public String getObjectKey() {
 		OrganizedObject objAnn = objectField.getAnnotation(OrganizedObject.class);
 		
-		if(objAnn.objectKey() != "") return objAnn.objectKey();
+		if(objAnn.objectKey().equals("")) return objAnn.objectKey();
 		return objectField.getName().toLowerCase();
 	}
 	

@@ -70,14 +70,10 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
-			String dataString = null;
-			if(jedis != null) dataString = jedis.get(getDataKey().getRedisKey());
+			String dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
 			if(dataString != null) {
-				//Get the converter to convert the data 
-				DefaultDataConverter<T> converter = this.converter;
-				
 				//Convert the data
 				T newData = converter.convertFromDatabase(dataString);
 				
@@ -98,24 +94,19 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			// Data in global cache is null
 			// Try to get data from MongoDB
 			DataKey dataKey = getDataKey();
-		
-			if(mongodb != null) {
-				DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
-				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
-				
-				DBObject object = collection.findOne(query);
-				
-				if(object != null) {
-					dataString = (String) object.get(dataKey.getMongoDBValue());
-				} 
-			}
+
+			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
+			BasicDBObject query = new BasicDBObject();
+			query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+
+			DBObject object = collection.findOne(query);
+
+			if(object != null) {
+				dataString = (String) object.get(dataKey.getMongoDBValue());
+			} 
 			
 			//Check if data is null
 			if(dataString != null) {
-				//Get the converter to convert the data 
-				DefaultDataConverter<T> converter = this.converter;
-				
 				//Convert the data
 				T newData = converter.convertFromDatabase(dataString);
 				
@@ -138,7 +129,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			
 			return null;
 		} finally {
-			if(jedis != null) jedis.close();
+			jedis.close();
 		}
 	}
 	
@@ -161,9 +152,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			//Get the data key
 			DataKey dataKey = getDataKey();
 			
-			//Get the data converter
-			DefaultDataConverter<T> converter = this.converter;
-			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(data);
 			if(dataString == null) {
@@ -185,12 +173,12 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 					BasicDBObject update;
 					if(dataString.equals("")) {
@@ -211,7 +199,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				}  else {
 					if(!dataString.equals("")) {
 						BasicDBObject create = new BasicDBObject();
-						create.put("identifier", dataKey.getMongoDBIdentifier());
+						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 						create.put(dataKey.getMongoDBValue(), dataString);
 
 						collection.insert(create);

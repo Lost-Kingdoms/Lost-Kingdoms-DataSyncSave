@@ -10,20 +10,14 @@ import com.mongodb.MongoClient;
  */
 public final class MongoDBFactory {
 
-	/**
-	 * The singletons instance
-	 */
+	/** The singletons instance */
 	private static MongoDBFactory instance;
 	
-	/**
-	 * The thread save {@link MongoClient}
-	 */
+	/** The thread save {@link MongoClient} */
 	private MongoClient mongoClient;
 	
-	/**
-	 * The name of the database
-	 */
-	private final String DATABASE_NAME;
+	/** The name of the database */
+	private static final String DATABASE_NAME = "lostkingdoms";
 	
 	
 	
@@ -37,9 +31,6 @@ public final class MongoDBFactory {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-		
-		//TODO Read db name
-		DATABASE_NAME = "lostkingdoms";
 	}
 	
 	/**

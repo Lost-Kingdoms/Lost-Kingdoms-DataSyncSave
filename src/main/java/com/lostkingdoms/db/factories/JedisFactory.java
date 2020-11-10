@@ -29,9 +29,9 @@ public final class JedisFactory {
         //JedisPoolConfig poolConfig = new JedisPoolConfig();
         
         jedisPool = new JedisPool(
-            "127.0.0.1",
-            6379
-        );
+                "127.0.0.1",
+                6379
+            );
     }
 
     /**

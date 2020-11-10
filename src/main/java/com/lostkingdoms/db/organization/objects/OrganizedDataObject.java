@@ -12,14 +12,13 @@ import com.lostkingdoms.db.organization.miscellaneous.DataKey;
  */
 public abstract class OrganizedDataObject<T> {
 
-	/**
-	 * The time when the list was last updated
-	 */
+	/** The String used in MongoDB for the identifier*/
+	protected static final String IDENTIFIER = "identifier";
+	
+	/** The time when the list was last updated */
 	private long timestamp;
 	
-	/**
-	 * Contains the keys for jedis and mongoDB and the jedis hashslot for this object
-	 */
+	/** Contains the keys for jedis and mongoDB and the jedis hashslot for this object */
 	private DataKey dataKey;
 	
 	/**
@@ -28,9 +27,7 @@ public abstract class OrganizedDataObject<T> {
 	 */
 	private OrganizationType organizationType;
 	
-	/**
-	 * THE data map object 
-	 */
+	/** THE data map object */
 	private T data;
 
 	

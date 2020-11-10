@@ -44,24 +44,19 @@ import redis.clients.jedis.Jedis;
  */
 public final class DataAccessManager {
 	
-	/**
-	 * The singletons instance
-	 */
+	/** The singletons instance */
 	private static DataAccessManager instance;
 	
-	/**
-	 * A map containing all created entities mapped by it's class
-	 */
+	/** A map containing all created entities mapped by it's class */
 	private Map<Class<?>, Map<Object, Object>> managedEntities;
 	
-	
+	/** String that represents the identifier field */
+	private static final String IDENTIFIER = "identifier";
 	
 	private DataAccessManager() {
 		instance = this;
-		managedEntities = new HashMap<Class<?>, Map<Object, Object>>();
+		managedEntities = new HashMap<>();
 	}
-	
-	
 	
 	/**
 	 * Get the instance of this manager
@@ -84,7 +79,7 @@ public final class DataAccessManager {
 	 */
 	public boolean isCached(Class<?> clazz, Object identifier) {
 		if(managedEntities.containsKey(clazz)) {
-			if(managedEntities.get(clazz).containsKey(identifier)) return true;
+			return managedEntities.get(clazz).containsKey(identifier);
 		}
 		return false;
 	}
@@ -106,9 +101,8 @@ public final class DataAccessManager {
 			DBCollection collection = db.getCollection(info.getEntityKey());
 			
 			BasicDBObject obj = new BasicDBObject();
-			obj.put("identifier", info.identifierToString(identifier));
-			if(collection.find(obj).count() == 0) return false;
-			return true;
+			obj.put(IDENTIFIER, info.identifierToString(identifier));
+			return collection.find(obj).count() != 0;
 		} catch (NoOrganizedEntityException | WrongIdentifierException e) {
 			e.printStackTrace();
 		}
@@ -142,7 +136,7 @@ public final class DataAccessManager {
 			//MongoDB
 			DBCollection collection = MongoDBFactory.getInstance().getMongoDatabase().getCollection(info.getEntityKey());
 			BasicDBObject query = new BasicDBObject();
-			query.put("identifier", info.identifierToString(identifier));
+			query.put(IDENTIFIER, info.identifierToString(identifier));
 			collection.remove(query);
 		} catch (WrongIdentifierException | NoOrganizedEntityException e) {
 			e.printStackTrace();
@@ -168,9 +162,9 @@ public final class DataAccessManager {
 			DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
 			DBCursor cur = mongodb.getCollection(info.getEntityKey()).find();
 			
-			List<T> entityList = new ArrayList<T>();
+			List<T> entityList = new ArrayList<>();
 			for(DBObject obj : cur) {
-				entityList.add((T) getEntity(clazz, info.stringToIdentifier((String) obj.get("identifier"))));
+				entityList.add((T) getEntity(clazz, info.stringToIdentifier((String) obj.get(IDENTIFIER))));
 			}
 			
 			return entityList;
@@ -178,7 +172,7 @@ public final class DataAccessManager {
 			e.printStackTrace();
 		}
 		
-		return new ArrayList<T>();
+		return new ArrayList<>();
 	}
 	
 	
@@ -190,8 +184,8 @@ public final class DataAccessManager {
 	 * @return
 	 */
 	public List<Object> getAllCachedEntities(Class<?> clazz) {
-		if(managedEntities.containsKey(clazz)) return new ArrayList<Object>(managedEntities.get(clazz).values());
-		return new ArrayList<Object>();
+		if(managedEntities.containsKey(clazz)) return new ArrayList<>(managedEntities.get(clazz).values());
+		return new ArrayList<>();
 	}
 	
 	
@@ -216,10 +210,8 @@ public final class DataAccessManager {
 			info.identifierToString(identifier);	
 			
 			//Check if this entity already exists in local cache an return it if so
-			if(managedEntities.containsKey(clazz)) {
-				if(managedEntities.get(clazz).containsKey(identifier)) {
-					return (T) managedEntities.get(clazz).get(identifier);
-				}
+			if(managedEntities.containsKey(clazz) && managedEntities.get(clazz).containsKey(identifier)) {
+				return (T) managedEntities.get(clazz).get(identifier);
 			} 
 			
 			//Object does not exist -> Create it
@@ -229,7 +221,7 @@ public final class DataAccessManager {
 			if(managedEntities.containsKey(clazz)) {
 				managedEntities.get(clazz).put(identifier, orgEntity);
 			} else {
-				Map<Object, Object> map = new HashMap<Object, Object>();
+				Map<Object, Object> map = new HashMap<>();
 				map.put(identifier, orgEntity);
 				managedEntities.put(clazz, map);
 			}
@@ -273,7 +265,6 @@ public final class DataAccessManager {
 		// Build object with reflection
 		try {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
-			
 			
 			Object obj;
 			try {
@@ -328,7 +319,7 @@ public final class DataAccessManager {
 			if(managedEntities.containsKey(obj.getClass())) {
 				managedEntities.get(obj.getClass()).put(identifier, obj);
 			} else {
-				Map<Object, Object> map = new HashMap<Object, Object>();
+				Map<Object, Object> map = new HashMap<>();
 				map.put(identifier, obj);
 				managedEntities.put(obj.getClass(), map);
 			}
@@ -363,7 +354,7 @@ public final class DataAccessManager {
 			if(managedEntities.containsKey(obj.getClass())) {
 				managedEntities.get(obj.getClass()).put(identifier, obj);
 			} else {
-				Map<Object, Object> map = new HashMap<Object, Object>();
+				Map<Object, Object> map = new HashMap<>();
 				map.put(identifier, obj);
 				managedEntities.put(obj.getClass(), map);
 			}
@@ -390,7 +381,7 @@ public final class DataAccessManager {
 	 * @throws WrongMethodUseException
 	 */
 	private void initializeField(OrganizedEntityInformation eInfo, OrganizedObjectInformation oInfo, Object obj, Object identifier, boolean none) 
-			throws NoSuchMethodException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, WrongMethodUseException {
+			throws NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException, WrongMethodUseException {
 		Field f = oInfo.getField();
 		
 		f.setAccessible(true);

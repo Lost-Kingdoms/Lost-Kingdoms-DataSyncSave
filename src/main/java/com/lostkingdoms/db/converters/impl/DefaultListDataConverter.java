@@ -32,7 +32,7 @@ public class DefaultListDataConverter<T> {
 	}
 
 	@SuppressWarnings({ "unchecked", "serial" })
-	public ArrayList<T> convertFromDatabase(String s) {
+	public List<T> convertFromDatabase(String s) {
 		//The Gson instance
 		Gson gson = new Gson();
 		
@@ -53,7 +53,7 @@ public class DefaultListDataConverter<T> {
 			obj = gson.fromJson(s, type);
 		}
 
-		ArrayList<T> newList = new ArrayList<T>();
+		ArrayList<T> newList = new ArrayList<>();
 
 		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
 			for(String o : ((List<String>)obj)) {
@@ -74,13 +74,11 @@ public class DefaultListDataConverter<T> {
 			}
 		}
 
-		if(newList.size() > 0) return newList;
-
-
-		 return (ArrayList<T>) obj;
+		if(!newList.isEmpty()) return newList;
+		return (ArrayList<T>) obj;
 	}
 
-	public String convertToDatabase(ArrayList<T> t) {
+	public String convertToDatabase(List<T> t) {
 		//The Gson instance
 		Gson gson = new Gson();
 
@@ -88,32 +86,29 @@ public class DefaultListDataConverter<T> {
 		
 		Object data = t;
 		//Check if list elements have registered converter
-		if(t.size() != 0) {
-			if(dataOrganizationManager.hasDataConverter(t.get(0).getClass())) {
-				List<String> newList = new ArrayList<String>();
+		if(!t.isEmpty() && dataOrganizationManager.hasDataConverter(t.get(0).getClass())) {
+			List<String> newList = new ArrayList<>();
 
-				
-				//Convert list elements one by one and add them to a new list
-				for(T o : t) {
-					AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(o.getClass());
-					
-					Class<?> clazz = o.getClass();
-					boolean superList = false;
-					while(clazz.getSuperclass() != null) {
-						if(clazz.getSuperclass() == this.genericClass) {
-							superList = true;
-						}
-						clazz = clazz.getSuperclass();
+			//Convert list elements one by one and add them to a new list
+			for(T o : t) {
+				AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(o.getClass());
+
+				Class<?> clazz = o.getClass();
+				boolean superList = false;
+				while(clazz.getSuperclass() != null) {
+					if(clazz.getSuperclass() == this.genericClass) {
+						superList = true;
 					}
-					if(superList) {
-						newList.add(converter.convertToDatabase(o) + ":" + o.getClass().getName());
-					} else {
-						newList.add(converter.convertToDatabase(o));
-					}	
+					clazz = clazz.getSuperclass();
 				}
-
-				data = newList;
+				if(superList) {
+					newList.add(converter.convertToDatabase(o) + ":" + o.getClass().getName());
+				} else {
+					newList.add(converter.convertToDatabase(o));
+				}	
 			}
+
+			data = newList;
 		}
 
 		return gson.toJson(data);

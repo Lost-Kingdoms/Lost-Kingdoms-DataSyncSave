@@ -106,7 +106,7 @@ public final class OrganizedEntityInformation {
 	 * @return
 	 */
 	public List<OrganizedObjectInformation> getOrganizedObjectFields() {
-		List<OrganizedObjectInformation> declaredFields = new ArrayList<OrganizedObjectInformation>();
+		List<OrganizedObjectInformation> declaredFields = new ArrayList<>();
 		
 		Class<?> currentClass = clazz;
 		while(currentClass != null) {
@@ -136,9 +136,8 @@ public final class OrganizedEntityInformation {
 	 */
 	public String getEntityKey() {
 		OrganizedEntity orgEnt = clazz.getAnnotation(OrganizedEntity.class);
-		if(orgEnt != null) {
-			if(orgEnt.entityKey() != "") return orgEnt.entityKey();
-			
+		if(orgEnt != null && orgEnt.entityKey().equals("")) {
+			return orgEnt.entityKey();
 		}
 		return clazz.getSimpleName().toLowerCase();
 	}

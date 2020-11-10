@@ -75,16 +75,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
-			String dataString = null;
-			if(jedis != null) dataString = jedis.get(getDataKey().getRedisKey());
+			String dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
 			if(dataString != null) {
-				//Get the converter to convert the data 
-				DefaultListDataConverter<T> converter = this.converter;
-
 				//Convert the data
-				ArrayList<T> newData = converter.convertFromDatabase(dataString);
+				ArrayList<T> newData = (ArrayList<T>) converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -103,25 +99,20 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			// Data in global cache is null
 			// Try to get data from MongoDB
 			DataKey dataKey = getDataKey();
-			
-			if(mongodb != null) {
-				DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
-				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
 
-				DBObject object = collection.findOne(query);
-				if(object != null) {
-					dataString = (String) object.get(dataKey.getMongoDBValue());
-				}
-			}	
+			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
+			BasicDBObject query = new BasicDBObject();
+			query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+
+			DBObject object = collection.findOne(query);
+			if(object != null) {
+				dataString = (String) object.get(dataKey.getMongoDBValue());
+			}
 
 			//Check if data is null
 			if(dataString != null) {
-				//Get the converter to convert the data 
-				DefaultListDataConverter<T> converter = this.converter;
-
 				//Convert the data
-				ArrayList<T> newData = converter.convertFromDatabase(dataString);
+				ArrayList<T> newData = (ArrayList<T>) converter.convertFromDatabase(dataString);
 
 				//Conversion failed
 				if(newData == null) {
@@ -143,7 +134,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			//Data does not exist yet
 			return getData();
 		} finally {
-			if(jedis != null) jedis.close();
+			jedis.close();
 		}
 	}
 	
@@ -164,9 +155,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			
 			//Get the data key
 			DataKey dataKey = getDataKey();
-			
-			//Get the data converter
-			DefaultListDataConverter<T> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(list);
@@ -189,12 +177,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -205,7 +193,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);
@@ -255,9 +243,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			//Get the data key
 			DataKey dataKey = getDataKey();
 			
-			//Get the data converter
-			DefaultListDataConverter<T> converter = this.converter;
-			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(temp);
 			if(dataString == null) {
@@ -279,12 +264,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -295,7 +280,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);
@@ -344,9 +329,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				//Get the data key
 				DataKey dataKey = getDataKey();
 				
-				//Get the data converter
-				DefaultListDataConverter<T> converter = this.converter;
-				
 				//Conversion to redis and mongoDB
 				String dataString = converter.convertToDatabase(temp);
 				if(dataString == null) {
@@ -368,12 +350,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					
 					//Test if object already exists
 					BasicDBObject query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					
 					DBObject object = collection.findOne(query);
 					if(object != null) {
 						query = new BasicDBObject();
-						query.put("identifier", dataKey.getMongoDBIdentifier());
+						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 						BasicDBObject newDoc = new BasicDBObject();
 						newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -384,7 +366,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 						collection.update(query, update);
 					}  else {
 						BasicDBObject create = new BasicDBObject();
-						create.put("identifier", dataKey.getMongoDBIdentifier());
+						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 						create.put(dataKey.getMongoDBValue(), dataString);
 						
 						collection.insert(create);
@@ -428,7 +410,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 				BasicDBObject newDoc = new BasicDBObject();
 				newDoc.put(dataKey.getMongoDBValue(), "");
@@ -459,9 +441,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 	 */
 	public boolean contains(T element) {
 		List<T> list = getList();
-		
-		if(list.contains(element)) return true;
-		return false;
+		return list.contains(element);
 	}
 	
 	/**
@@ -471,7 +451,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 	 */
 	public int size() {
 		List<T> list = getList();
-		
 		return list.size();
 	}
 
@@ -507,9 +486,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 			//Get the data key
 			DataKey dataKey = getDataKey();
 			
-			//Get the data converter
-			DefaultListDataConverter<T> converter = this.converter;
-			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(temp);
 			if(dataString == null) {
@@ -531,12 +507,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -547,7 +523,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);

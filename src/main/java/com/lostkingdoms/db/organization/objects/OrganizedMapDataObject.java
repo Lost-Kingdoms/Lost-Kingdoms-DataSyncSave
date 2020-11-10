@@ -77,14 +77,10 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
-			String dataString = null;
-			if(jedis != null) dataString = jedis.get(getDataKey().getRedisKey());
+			String dataString = jedis.get(getDataKey().getRedisKey());
 			
 			// Check if data is null
 			if(dataString != null) {
-				//Get the converter to convert the data 
-				DefaultMapDataConverter<K, V> converter = this.converter;
-
 				//Convert the data
 				HashMap<K, V> newData = converter.convertFromDatabase(dataString);
 
@@ -106,22 +102,17 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			// Try to get data from MongoDB
 			DataKey dataKey = getDataKey();
 
-			if(mongodb != null) {
-				DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
-				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
+			BasicDBObject query = new BasicDBObject();
+			query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-				DBObject object = collection.findOne(query);
-				if(object != null) {
-					dataString = (String) object.get(dataKey.getMongoDBValue());
-				}
+			DBObject object = collection.findOne(query);
+			if(object != null) {
+				dataString = (String) object.get(dataKey.getMongoDBValue());
 			}
 			
 			//Check if data is null
 			if(dataString != null) {
-				//Get the converter to convert the data 
-				DefaultMapDataConverter<K, V> converter = this.converter;
-
 				//Convert the data
 				HashMap<K, V> newData = converter.convertFromDatabase(dataString);
 
@@ -137,7 +128,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				updateTimestamp(newTimestamp);
 
 				//Push data to Redis
-				if(jedis != null) jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+				jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
 
 				return Collections.unmodifiableMap(getData());
 			}
@@ -145,7 +136,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			//Data does not exist yet
 			return getData();
 		} finally {
-			if(jedis != null) jedis.close();
+			jedis.close();
 		}
 	}
 	
@@ -161,9 +152,6 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			
 			//Get the data key
 			DataKey dataKey = getDataKey();
-			
-			//Get the data converter
-			DefaultMapDataConverter<K, V> converter = this.converter;
 			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(map);
@@ -186,12 +174,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -202,7 +190,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);
@@ -254,9 +242,6 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 			//Get the data key
 			DataKey dataKey = getDataKey();
 			
-			//Get the data converter
-			DefaultMapDataConverter<K, V> converter = this.converter;
-			
 			//Conversion to redis and mongoDB
 			String dataString = converter.convertToDatabase(temp);
 			if(dataString == null) {
@@ -278,12 +263,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				
 				//Test if object already exists
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", dataKey.getMongoDBIdentifier());
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 				
 				DBObject object = collection.findOne(query);
 				if(object != null) {
 					query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 					BasicDBObject newDoc = new BasicDBObject();
 					newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -294,7 +279,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					collection.update(query, update);
 				}  else {
 					BasicDBObject create = new BasicDBObject();
-					create.put("identifier", dataKey.getMongoDBIdentifier());
+					create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					create.put(dataKey.getMongoDBValue(), dataString);
 					
 					collection.insert(create);
@@ -343,9 +328,6 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				//Get the data key
 				DataKey dataKey = getDataKey();
 				
-				//Get the data converter
-				DefaultMapDataConverter<K, V> converter = this.converter;
-				
 				//Conversion to redis and mongoDB
 				String dataString = converter.convertToDatabase(temp);
 				if(dataString == null) {
@@ -367,12 +349,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					
 					//Test if object already exists
 					BasicDBObject query = new BasicDBObject();
-					query.put("identifier", dataKey.getMongoDBIdentifier());
+					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 					
 					DBObject object = collection.findOne(query);
 					if(object != null) {
 						query = new BasicDBObject();
-						query.put("identifier", dataKey.getMongoDBIdentifier());
+						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
 						BasicDBObject newDoc = new BasicDBObject();
 						newDoc.put(dataKey.getMongoDBValue(), dataString);
@@ -383,7 +365,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 						collection.update(query, update);
 					}  else {
 						BasicDBObject create = new BasicDBObject();
-						create.put("identifier", dataKey.getMongoDBIdentifier());
+						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 						create.put(dataKey.getMongoDBValue(), dataString);
 						
 						collection.insert(create);
@@ -427,7 +409,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 				
 				BasicDBObject query = new BasicDBObject();
-				query.put("identifier", new ObjectId(dataKey.getMongoDBIdentifier()));
+				query.put(IDENTIFIER, new ObjectId(dataKey.getMongoDBIdentifier()));
 
 				BasicDBObject newDoc = new BasicDBObject();
 				newDoc.put(dataKey.getMongoDBValue(), "");
@@ -472,9 +454,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 	 */
 	public boolean containsKey(K key) {
 		Map<K, V> map = getMap();
-		
-		if(map.containsKey(key)) return true;
-		return false;
+		return map.containsKey(key);
 	}
 	
 	/**
@@ -485,9 +465,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 	 */
 	public boolean containsValue(V value) {
 		Map<K, V> map = getMap();
-		
-		if(map.containsValue(value)) return true;
-		return false;
+		return map.containsValue(value);
 	}
 	
 	/**
@@ -497,7 +475,6 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 	 */
 	public int size() {
 		Map<K, V> map = getMap();
-		
 		return map.size();
 	}
 	
