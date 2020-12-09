@@ -22,6 +22,7 @@ public class DatabaseObjectConversionException extends Error {
 		this.converter = converter;
 	}
 	
+	@Override
 	public String toString() {
 		return "ObjectNotConvertableError: " + "String \"" + reason + "\" could not be converted by " + converter;
 	}

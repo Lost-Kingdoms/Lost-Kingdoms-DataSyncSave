@@ -1,6 +1,7 @@
 package com.lostkingdoms.db.sync;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Utility class to calculate a hashslot a key is in
@@ -56,12 +57,7 @@ public final class HashSlotCalculator {
 	 * @return the hashslot for the key
 	 */
 	public static short calculateHashSlot(String key) {
-		try {
-			return (short)(calculateCrc16(key.getBytes("UTF-8")) % HASH_SLOT_COUNT);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		return 0;
+		return (short) (calculateCrc16(key.getBytes(StandardCharsets.UTF_8)) % HASH_SLOT_COUNT);
     }
 	
 	/**
