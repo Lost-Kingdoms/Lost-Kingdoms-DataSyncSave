@@ -466,7 +466,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 		hashslot = 100;
 		
 		if(DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
-			setData((ArrayList<T>) getList());
+			setData(new ArrayList<T>(getList()));
 		}
 		
 		Jedis jedis = JedisFactory.getInstance().getJedis();	
