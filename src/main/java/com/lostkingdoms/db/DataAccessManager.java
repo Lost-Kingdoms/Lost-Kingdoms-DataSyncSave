@@ -48,13 +48,12 @@ public final class DataAccessManager {
 	private static DataAccessManager instance;
 	
 	/** A map containing all created entities mapped by it's class */
-	private Map<Class<?>, Map<Object, Object>> managedEntities;
+	private final Map<Class<?>, Map<Object, Object>> managedEntities;
 	
 	/** String that represents the identifier field */
 	private static final String IDENTIFIER = "identifier";
 	
 	private DataAccessManager() {
-		instance = this;
 		managedEntities = new HashMap<>();
 	}
 	
@@ -73,8 +72,8 @@ public final class DataAccessManager {
 	/**
 	 * Check if a entity is locally cached
 	 * 
-	 * @param clazz
-	 * @param identifier
+	 * @param clazz class of the object to test
+	 * @param identifier identifier ob the object to test
 	 * @return true if the entity is locally cached
 	 */
 	public boolean isCached(Class<?> clazz, Object identifier) {
@@ -119,20 +118,19 @@ public final class DataAccessManager {
 	 * @param identifier
 	 */
 	public void removeEntity(Class<?> clazz, Object identifier) {
-		Jedis jedis = JedisFactory.getInstance().getJedis();
-		try {
+		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 			OrganizedEntityInformation info = new OrganizedEntityInformation(clazz);
-			
+
 			//Local cache
-			if(managedEntities.containsKey(clazz)) {
+			if (managedEntities.containsKey(clazz)) {
 				managedEntities.get(clazz).remove(identifier);
 			}
-			
-			//Redis		
-			for(OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
+
+			//Redis
+			for (OrganizedObjectInformation i : info.getOrganizedObjectFields()) {
 				jedis.del(info.getEntityKey() + "." + i.getObjectKey() + "." + info.identifierToString(identifier));
 			}
-			
+
 			//MongoDB
 			DBCollection collection = MongoDBFactory.getInstance().getMongoDatabase().getCollection(info.getEntityKey());
 			BasicDBObject query = new BasicDBObject();
@@ -140,8 +138,6 @@ public final class DataAccessManager {
 			collection.remove(query);
 		} catch (WrongIdentifierException | NoOrganizedEntityException e) {
 			e.printStackTrace();
-		} finally {
-			jedis.close();
 		}
 	}
 	
@@ -161,7 +157,7 @@ public final class DataAccessManager {
 			
 			DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
 			DBCursor cur = mongodb.getCollection(info.getEntityKey()).find();
-			
+
 			List<T> entityList = new ArrayList<>();
 			for(DBObject obj : cur) {
 				entityList.add((T) getEntity(clazz, info.stringToIdentifier((String) obj.get(IDENTIFIER))));
@@ -197,7 +193,7 @@ public final class DataAccessManager {
 	 * 
 	 * @param <T>
 	 * @param clazz
-	 * @param id
+	 * @param identifier
 	 * @return found class or a newly created
 	 * 
 	 */
@@ -258,7 +254,6 @@ public final class DataAccessManager {
 	 * 
 	 * @param clazz
 	 * @param identifier
-	 * @param organizedDataType
 	 * @return builded object or null if clazz is no {@link com.lostkingdoms.db.organization.OrganizedEntity}
 	 */
 	private Object createEntity(Class<?> clazz, Object identifier) {		
@@ -418,6 +413,5 @@ public final class DataAccessManager {
 		f.set(obj, orgObj);
 		f.setAccessible(false);
 	}
-	
-	
+
 }

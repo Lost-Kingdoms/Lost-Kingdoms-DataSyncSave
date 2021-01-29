@@ -7,6 +7,9 @@ import com.mongodb.MongoClient;
 
 /**
  * Provider class for {@link MongoClient} and it's {@link DB} instances
+ *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  */
 public final class MongoDBFactory {
 
@@ -25,7 +28,7 @@ public final class MongoDBFactory {
 	 * Constructor.
 	 * Initiates the mongoDB connection.
 	 */
-	public MongoDBFactory() {
+	private MongoDBFactory() {
 		try {
 			this.mongoClient = new MongoClient();
 		} catch (UnknownHostException e) {
@@ -48,11 +51,10 @@ public final class MongoDBFactory {
 	 * @return the database
 	 */
 	public DB getMongoDatabase() {
-		if(this.mongoClient == null) return null;
 		try {
 			mongoClient.getAddress();
 		} catch(Exception e) {
-			return null;
+			e.printStackTrace();
 		}
 		return getMongoClient().getDB(DATABASE_NAME);
 	}

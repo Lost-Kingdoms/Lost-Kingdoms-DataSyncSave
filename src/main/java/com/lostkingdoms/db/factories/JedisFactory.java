@@ -6,6 +6,9 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * Provider class for {@link Jedis Pool} and it's {@link Jedis} instances
+ *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  */
 public final class JedisFactory {
 
@@ -25,7 +28,7 @@ public final class JedisFactory {
 	 * Constructor.
 	 * Initiates the jedis connection and pool.
 	 */
-    public JedisFactory() {
+    private JedisFactory() {
         //JedisPoolConfig poolConfig = new JedisPoolConfig();
         
         jedisPool = new JedisPool(
@@ -49,11 +52,7 @@ public final class JedisFactory {
      * @return A {@link Jedis} instance
      */
     public Jedis getJedis() {
-    	try {
-    		return jedisPool.getResource();
-    	} catch (JedisConnectionException e) {
-    		return null;
-    	}
+    	return jedisPool.getResource();
     }
 
     /**

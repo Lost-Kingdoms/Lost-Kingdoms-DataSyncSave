@@ -60,37 +60,31 @@ public final class DataOrganizationManager {
 	/**
 	 * Constructor of the {@link DataOrganizationManager}
 	 */
-	public DataOrganizationManager() {
-		instance = this;
+	private DataOrganizationManager() {
 		LKLogger.getInstance().setLevel(LogLevel.DEBUG);
 		LKLogger.getInstance().setLogType(LogType.ALL);
 		
 		LKLogger.getInstance().info("Lost-Kingdoms-DataSync Starting", LogType.STARTUP);
-		
 		LKLogger.getInstance().info("MongoDB starting up", LogType.STARTUP);
 		MongoDBFactory.getInstance();
 		LKLogger.getInstance().info("MongoDB succesfully started", LogType.STARTUP);
 		
 		try {
-			converters = new HashMap<Class<?>, AbstractDataConverter<?>>();
+			converters = new HashMap<>();
 			instanceID = UUID.randomUUID();
 			LKLogger.getInstance().debug("Session id is" + instanceID.toString(), LogType.STARTUP);
 			lastUpdated = new long[HASH_SLOT_COUNT];
 			
-			new Thread(new Runnable() {
-				
-				@Override
-				public void run() {
-					LKLogger.getInstance().info("Jedis starting up", LogType.STARTUP);
-					Jedis jedis = JedisFactory.getInstance().getJedis();
-					LKLogger.getInstance().info("Jedis succesfully started", LogType.STARTUP);
-					
-					LKLogger.getInstance().debug("Sync Listener subscribed", LogType.STARTUP);
-					jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
-					
-					LKLogger.getInstance().warn("Sync Listener closed!", LogType.STARTUP);
-					jedis.quit();
-				}
+			new Thread(() -> {
+				LKLogger.getInstance().info("Jedis starting up", LogType.STARTUP);
+				Jedis jedis = JedisFactory.getInstance().getJedis();
+				LKLogger.getInstance().info("Jedis succesfully started", LogType.STARTUP);
+
+				LKLogger.getInstance().debug("Sync Listener subscribed", LogType.STARTUP);
+				jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
+
+				LKLogger.getInstance().warn("Sync Listener closed!", LogType.STARTUP);
+				jedis.quit();
 			}, "sync_Listener").start();
 			
 		} catch(Exception e) {
@@ -110,35 +104,34 @@ public final class DataOrganizationManager {
 		return instance;
 	}
 	
-	public void invalidateHashSlot(short slot) {
+	public void invalidateHashSlot(int slot) {
 		lastUpdated[slot] = System.currentTimeMillis();
 	}
 	
 	/**
 	 * Get the timestamp when a hashslot was last updated
 	 * 
-	 * @param hashslot
+	 * @param hashSlot the hashslot to check
 	 * @return Last update timestamp
 	 */
-	public long getLastUpdated(int hashslot) {
-		return lastUpdated[hashslot];
+	public long getLastUpdated(int hashSlot) {
+		return lastUpdated[hashSlot];
 	}
 	
 	/**
 	 * Register a {@link OrganizedEntity} and it's corresponding {@link OrganizedEntityConverter}
 	 * 
-	 * @param clazz
-	 * @param converter
+	 * @param clazz the class the {@link OrganizedEntityConverter} supports
+	 * @param converter the {@link OrganizedEntityConverter} to register
 	 */
-	public void registerOrganizedEntity(Class<?> clazz, 
-			OrganizedEntityConverter<?> converter) {
+	public void registerOrganizedEntity(Class<?> clazz, OrganizedEntityConverter<?> converter) {
 		registerDataConverter(clazz, converter);
 	}
 	
 	/**
-	 * Registers an {@link IDataConverter} 
+	 * Registers an {@link AbstractDataConverter}
 	 * 
-	 * @param dataConverter
+	 * @param converter the {@link {@link AbstractDataConverter} to register
 	 */
 	public void registerDataConverter(Class<?> clazz, AbstractDataConverter<?> converter) {
 		converters.put(clazz, converter);
@@ -148,7 +141,7 @@ public final class DataOrganizationManager {
 	/**
 	 * Get a converter for a class
 	 * 
-	 * @param clazz
+	 * @param clazz the class to get a converter from
 	 * @return The suitable converter or {@link DefaultDataConverter}
 	 */
 	public AbstractDataConverter<?> getDataConverter(Class<?> clazz) {
@@ -161,18 +154,17 @@ public final class DataOrganizationManager {
 	/**
 	 * Check if there exists a converter for a class
 	 * 
-	 * @param clazz
+	 * @param clazz the class to check
 	 * @return True, if converter exists
 	 */
 	public boolean hasDataConverter(Class<?> clazz) {
-		if(converters.containsKey(clazz)) return true;
-		return false;
+		return converters.containsKey(clazz);
 	}
 	
 	/**
-	 * Get this instances ID
+	 * Get this instances {@link UUID}
 	 * 
-	 * @return
+	 * @return the instances {@link UUID}
 	 */
 	public UUID getInstanceID() {
 		return this.instanceID;

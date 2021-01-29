@@ -1,7 +1,10 @@
 package com.lostkingdoms.db.organization.objects;
 
+import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
+import com.lostkingdoms.db.sync.DataSyncMessage;
+import redis.clients.jedis.Jedis;
 
 /**
  * Abstract class of all OrganizedDataObjects
@@ -30,7 +33,8 @@ public abstract class OrganizedDataObject<T> {
 	/** THE data map object */
 	private T data;
 
-	
+
+
 	protected T getData() {
 		return this.data;
 	}
@@ -42,7 +46,7 @@ public abstract class OrganizedDataObject<T> {
 	/**
 	 * Get the {@link DataKey} for this {@link OrganizedSingleDataObject}
 	 * 
-	 * @return
+	 * @return the {@link DataKey}
 	 */
 	protected DataKey getDataKey() {
 		return this.dataKey;
@@ -70,7 +74,7 @@ public abstract class OrganizedDataObject<T> {
 	/**
 	 * Set the last updated timestamp
 	 * 
-	 * @param The new timestamp
+	 * @param timestamp The new timestamp
 	 */
 	protected void updateTimestamp(long timestamp) {
 		this.timestamp = timestamp;
@@ -89,10 +93,22 @@ public abstract class OrganizedDataObject<T> {
 	/**
 	 * Get the {@link OrganizationType} of this object
 	 * 
-	 * @return
+	 * @return the {@link OrganizationType}
 	 */
 	protected OrganizationType getOrganizationType() {
 		return this.organizationType;
 	}
-	
+
+	/**
+	 * Sends the sync message if {@link OrganizationType} equals SYNC or ALL
+	 *
+	 * @param jedis the jedis instance to publish on
+	 */
+	protected void sendSyncMessage(Jedis jedis) {
+		if (getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+			jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL,
+					new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
+		}
+	}
+
 }

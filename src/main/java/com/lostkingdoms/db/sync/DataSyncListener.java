@@ -16,8 +16,8 @@ public final class DataSyncListener extends JedisPubSub {
 	public void onMessage(String channel, String message) {
 		//If channel is the sync message channel
 		if(channel.equals(DataOrganizationManager.SYNC_MESSAGE_CHANNEL)) {
-			DataSyncMessage syncMessage = DataSyncMessage.deserialize(message.getBytes());
-			
+			DataSyncMessage syncMessage = DataSyncMessage.deserialize(message);
+
 			//If message is not self sent
 			if(!syncMessage.getSenderInstanceID().equals(DataOrganizationManager.getInstance().getInstanceID()))
 				//Invalidate hashslot

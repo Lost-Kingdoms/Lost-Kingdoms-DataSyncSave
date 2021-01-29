@@ -10,6 +10,9 @@ import com.lostkingdoms.db.sync.HashSlotCalculator;
  * and MongoDB.
  * Also contains the redis hashslot of the key and the identifier of the organized
  * Entity or Object.
+ *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  */
 public final class DataKey {
 
@@ -31,7 +34,7 @@ public final class DataKey {
 	/**
 	 * The hashslot of the redis key
 	 */
-	private short redisHashslot;
+	private int redisHashslot;
 	
 	
 	
@@ -79,7 +82,7 @@ public final class DataKey {
 	/**
 	 * Converts the identifier to a {@link String}
 	 * 
-	 * @return 
+	 * @return the identifier as String
 	 */
 	private String identifierToString() {
 		Class<?> idClass = this.identifier.getClass();
@@ -102,9 +105,9 @@ public final class DataKey {
 	/**
 	 * Get the redis hashslot of this key
 	 * 
-	 * @return
+	 * @return the redis hashslot
 	 */
-	public short getHashslot() {
+	public int getHashslot() {
 		return this.redisHashslot;
 	}
 }

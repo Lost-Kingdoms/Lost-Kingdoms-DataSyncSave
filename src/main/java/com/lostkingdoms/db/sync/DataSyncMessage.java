@@ -1,23 +1,23 @@
 package com.lostkingdoms.db.sync;
 
-import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * The representation of a message to update a hashslot  
+ * The representation of a message to update a hashslot
+ *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  */
 public final class DataSyncMessage {
 
-	/**
-	 * Unique ID to identify the cache instance that initiated the data sync
-	 */
-	private UUID senderInstanceID;
+	/** Unique ID to identify the cache instance that initiated the data sync */
+	private final UUID senderInstanceID;
 	
-	/**
-	 * Represents the hashslot of the key that is to be updated
-	 */
-	private short keyHashSlot;
-	
+	/** Represents the hashslot of the key that is to be updated */
+	private final int keyHashSlot;
+
+
+
 	/**
 	 * Constructor.
 	 * Creates a new {@link DataSyncMessage}
@@ -25,57 +25,15 @@ public final class DataSyncMessage {
 	 * @param senderInstanceID the id of the cache instance
 	 * @param keyHashSlot the hashslot of the key that will be updated
 	 */
-	public DataSyncMessage(UUID senderInstanceID, short keyHashSlot) {
+	public DataSyncMessage(UUID senderInstanceID, int keyHashSlot) {
 		this.senderInstanceID = senderInstanceID;
 		this.keyHashSlot = keyHashSlot;
 	}
 	
 	/**
-	 * Serializes this {@linkDataSyncMessage} to an sendable list of bytes
-	 * 
-	 * @return
-	 */
-	public byte[] serialize() {
-		// Convert the senderInstanceID to byte array
-		ByteBuffer bb = ByteBuffer.wrap(new byte[18]);
-        bb.putLong(senderInstanceID.getMostSignificantBits());
-        bb.putLong(senderInstanceID.getLeastSignificantBits());
-        
-        byte[] messageBytes = bb.array();
-        
-		// Final two bytes are the key CRC in big-endian format
-		messageBytes[16] = (byte)(keyHashSlot >>> 8);
-		messageBytes[17] = (byte)(keyHashSlot & 0x00FF);
-
-		return messageBytes;
-	}
-	
-	/**
-	 * Deserializes an array of bytes to {@link DataSyncMessage}
-	 * 
-	 * @param messageBytes
-	 * @return
-	 */
-	public static DataSyncMessage deserialize(byte[] messageBytes) {
-		if(messageBytes == null) throw new IllegalArgumentException("messageBytes is null");
-		if(messageBytes.length != 18) throw new IllegalArgumentException("Invalid message length");
-		
-		// Construct uuid of sender
-		ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[16]);
-        Long high = byteBuffer.getLong();
-        Long low = byteBuffer.getLong();
-        UUID senderInstanceID = new UUID(high, low);
-		
-		// Construct updated hashslot
-		short keyHashSlot = (short)((((short) (messageBytes[16] & 0xff)) << 8) + messageBytes[17]);
-		
-		return new DataSyncMessage(senderInstanceID, keyHashSlot);
-	}
-	
-	/**
 	 * Get the sender instance ID
 	 * 
-	 * @return
+	 * @return the instance of the sender
 	 */
 	public UUID getSenderInstanceID() {
 		return this.senderInstanceID;
@@ -84,10 +42,43 @@ public final class DataSyncMessage {
 	/**
 	 * Get the updated hashslot
 	 * 
-	 * @return
+	 * @return the updated hashslot
 	 */
-	public short getHashSlot() {
+	public int getHashSlot() {
 		return this.keyHashSlot;
 	}
-	
+
+	/**
+	 * Serializes this {@link DataSyncMessage} to an sendable string
+	 *
+	 * @return the serialized string
+	 */
+	public String serialize() {
+		//Serialize uuid of sender
+		String senderInstanceID = this.senderInstanceID.toString();
+
+		//Serialize hashslot
+		String keyHashSlot = String.valueOf(this.keyHashSlot);
+
+		return senderInstanceID + ":" + keyHashSlot;
+	}
+
+	/**
+	 * Deserializes an string to {@link DataSyncMessage}
+	 *
+	 * @param message the message to deserialize
+	 * @return the created {@link DataSyncMessage}
+	 */
+	public static DataSyncMessage deserialize(String message) {
+		String[] split = message.split(":");
+
+		// Construct uuid of sender
+		UUID senderInstanceID = UUID.fromString(split[0]);
+
+		// Construct updated hashslot
+		int keyHashSlot = Integer.parseInt(split[1]);
+
+		return new DataSyncMessage(senderInstanceID, keyHashSlot);
+	}
+
 }

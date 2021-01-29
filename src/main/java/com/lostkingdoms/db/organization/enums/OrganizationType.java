@@ -8,6 +8,9 @@ import com.lostkingdoms.db.organization.objects.OrganizedSingleDataObject;
  * SAVE_TO_DB: Save to mongoDB database
  * BOTH: Save to redis and mongoDB
  * NONE: Use only local cache (RAM)
+ *
+ * @author Tim Küchler (https://github.com/TimK1998)
+ *
  */
 public enum OrganizationType {
 
