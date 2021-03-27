@@ -19,9 +19,10 @@ public final class DataSyncListener extends JedisPubSub {
 			DataSyncMessage syncMessage = DataSyncMessage.deserialize(message);
 
 			//If message is not self sent
-			if(!syncMessage.getSenderInstanceID().equals(DataOrganizationManager.getInstance().getInstanceID()))
+			if(!syncMessage.getSenderInstanceID().equals(DataOrganizationManager.getInstance().getInstanceID())) {
 				//Invalidate hashslot
 				DataOrganizationManager.getInstance().invalidateHashSlot(syncMessage.getHashSlot());
+			}
 		}
 	}
 	

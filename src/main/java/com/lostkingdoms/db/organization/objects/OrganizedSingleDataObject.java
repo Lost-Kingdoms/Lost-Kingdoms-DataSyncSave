@@ -58,10 +58,10 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
 			long newTimestamp = System.currentTimeMillis() - 1;
 
-			int hashslot = getDataKey().getHashslot();
-
 			// If data is up-to-date
-			if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0) || getOrganizationType() == OrganizationType.NONE) {
+			int hashslot = getDataKey().getHashslot();
+			if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
+					|| getOrganizationType() == OrganizationType.NONE) {
 				return getData();
 			}
 

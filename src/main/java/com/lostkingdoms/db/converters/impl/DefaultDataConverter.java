@@ -24,7 +24,7 @@ public final class DefaultDataConverter<T> {
 	/**
 	 * Constructor for non-map and non-list {@link DefaultDataConverter}
 	 * 
-	 * @param thisClass
+	 * @param genericClass
 	 */
 	public DefaultDataConverter(Class<T> genericClass) {
 		this.genericClass = genericClass;
