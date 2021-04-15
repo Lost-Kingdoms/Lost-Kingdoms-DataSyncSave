@@ -10,18 +10,19 @@ public class WrongMethodUseException extends Exception {
 	/**
 	 * The method name which was misused
 	 */
-	private String methodName;
+	private final String methodName;
 	
 	/**
 	 * The class which misused the method
 	 */
-	private Class<?> objectClass;
+	private final Class<?> objectClass;
 	
 	public WrongMethodUseException(String methodName, Class<?> objectClass) {
 		this.methodName = methodName;
 		this.objectClass = objectClass;
 	}
-	
+
+	@Override
 	public String toString() {
 		return "WrongMethodUseException: Method " + methodName + " was used for class " + objectClass.getSimpleName();
 	}

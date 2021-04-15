@@ -8,6 +8,6 @@ package com.lostkingdoms.db.organization.miscellaneous;
  * @author Tim Küchler (https://github.com/TimK1998)
  *
  */
-public class NullObj {
+public interface NullObj {
 
 }

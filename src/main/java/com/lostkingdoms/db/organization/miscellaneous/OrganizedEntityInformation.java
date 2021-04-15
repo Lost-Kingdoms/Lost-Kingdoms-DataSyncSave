@@ -23,7 +23,7 @@ import com.lostkingdoms.db.organization.annotations.OrganizedSuperentity;
  */
 public final class OrganizedEntityInformation {
 
-	private Class<?> clazz;
+	private final Class<?> clazz;
 	
 	public OrganizedEntityInformation(Class<?> clazz) throws NoOrganizedEntityException {
 		if(clazz.getAnnotation(OrganizedEntity.class) == null &&

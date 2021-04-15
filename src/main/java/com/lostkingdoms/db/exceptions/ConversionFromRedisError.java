@@ -10,12 +10,13 @@ public class ConversionFromRedisError extends Exception {
 	/**
 	 * The reason for this exception
 	 */
-	private String reason;
+	private final String reason;
 	
 	public ConversionFromRedisError(String reason) {
 		this.reason = reason;
 	}
-	
+
+	@Override
 	public String toString() {
 		return "ConversionFromRedisError: Redis data String \"" + reason + "\" could not be converted";
 	}

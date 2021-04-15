@@ -10,12 +10,13 @@ public class NoOrganizedEntityException extends Exception {
 	/**
 	 * The wrong class
 	 */
-	private Class<?> buildClass;
+	private final Class<?> buildClass;
 	
 	public NoOrganizedEntityException(Class<?> buildClass) {
 		this.buildClass = buildClass;
 	}
-	
+
+	@Override
 	public String toString() {
 		return "NoOrganizedEntityException: Class " + buildClass.getSimpleName() + " has no OrganizedEntity annotation!";
 	}

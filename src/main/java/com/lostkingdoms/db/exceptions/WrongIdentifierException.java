@@ -10,18 +10,19 @@ public class WrongIdentifierException extends Exception {
 	/**
 	 * The reason for this exception
 	 */
-	private Class<?> reason;
+	private final Class<?> reason;
 	
 	/**
 	 * The reason for this exception
 	 */
-	private Class<?> identifier;
+	private final Class<?> identifier;
 	
 	public WrongIdentifierException(Class<?> clazz, Class<?> identifier) {
 		this.reason = clazz;
 		this.identifier = identifier;
 	}
-	
+
+	@Override
 	public String toString() {
 		return "WrongIdentifierException: Class" + identifier.getSimpleName() + " is not identifier class of class " + reason.getSimpleName() + "!";
 	}

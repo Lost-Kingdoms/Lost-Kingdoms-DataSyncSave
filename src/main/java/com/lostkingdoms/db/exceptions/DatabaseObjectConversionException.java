@@ -10,12 +10,12 @@ public class DatabaseObjectConversionException extends Error {
 	/**
 	 * The reason for this exception
 	 */
-	private String reason;
+	private final String reason;
 	
 	/**
 	 * The converter that has failed
 	 */
-	private String converter;
+	private final String converter;
 	
 	public DatabaseObjectConversionException(String reason, String converter) {
 		this.reason = reason;

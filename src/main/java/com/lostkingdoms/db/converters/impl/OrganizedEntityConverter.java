@@ -6,7 +6,6 @@ import com.lostkingdoms.db.DataAccessManager;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.exceptions.NoOrganizedEntityException;
 import com.lostkingdoms.db.exceptions.WrongIdentifierException;
-import com.lostkingdoms.db.organization.annotations.Identifier;
 import com.lostkingdoms.db.organization.annotations.OrganizedEntity;
 import com.lostkingdoms.db.organization.miscellaneous.OrganizedEntityInformation;
 

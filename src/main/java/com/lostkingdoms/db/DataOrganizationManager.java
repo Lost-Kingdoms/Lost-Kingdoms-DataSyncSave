@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.lostkingdoms.db.converters.AbstractDataConverter;
 import com.lostkingdoms.db.converters.impl.DefaultDataConverter;
 import com.lostkingdoms.db.converters.impl.OrganizedEntityConverter;
+import com.lostkingdoms.db.errors.ConverterAlreadyRegisteredError;
 import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.logger.LKLogger;
@@ -124,7 +125,7 @@ public final class DataOrganizationManager {
 	 * @param clazz the class the {@link OrganizedEntityConverter} supports
 	 * @param converter the {@link OrganizedEntityConverter} to register
 	 */
-	public void registerOrganizedEntity(Class<?> clazz, OrganizedEntityConverter<?> converter) {
+	public <T> void registerOrganizedEntity(Class<T> clazz, OrganizedEntityConverter<T> converter) {
 		registerDataConverter(clazz, converter);
 	}
 	
@@ -133,7 +134,8 @@ public final class DataOrganizationManager {
 	 * 
 	 * @param converter the {@link {@link AbstractDataConverter} to register
 	 */
-	public void registerDataConverter(Class<?> clazz, AbstractDataConverter<?> converter) {
+	public <T> void registerDataConverter(Class<T> clazz, AbstractDataConverter<T> converter) {
+		if(hasDataConverter(clazz)) throw new ConverterAlreadyRegisteredError(clazz);
 		converters.put(clazz, converter);
 		LKLogger.getInstance().debug("Data Converter registered: " + clazz.getSimpleName(), LogType.STARTUP);
 	}
@@ -144,11 +146,9 @@ public final class DataOrganizationManager {
 	 * @param clazz the class to get a converter from
 	 * @return The suitable converter or {@link DefaultDataConverter}
 	 */
-	public AbstractDataConverter<?> getDataConverter(Class<?> clazz) {
-		if(converters.get(clazz) != null) 
-			return converters.get(clazz);
-		
-		return null;
+	@SuppressWarnings("unchecked")
+	public <T> AbstractDataConverter<T> getDataConverter(Class<T> clazz) {
+		return (AbstractDataConverter<T>) converters.getOrDefault(clazz, null);
 	}
 	
 	/**
@@ -157,7 +157,7 @@ public final class DataOrganizationManager {
 	 * @param clazz the class to check
 	 * @return True, if converter exists
 	 */
-	public boolean hasDataConverter(Class<?> clazz) {
+	public <T> boolean hasDataConverter(Class<T> clazz) {
 		return converters.containsKey(clazz);
 	}
 	
@@ -167,6 +167,6 @@ public final class DataOrganizationManager {
 	 * @return the instances {@link UUID}
 	 */
 	public UUID getInstanceID() {
-		return this.instanceID;
+		return instanceID;
 	}
 }

@@ -2,7 +2,6 @@ package com.lostkingdoms.db.factories;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * Provider class for {@link Jedis Pool} and it's {@link Jedis} instances

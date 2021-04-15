@@ -25,7 +25,7 @@ public class DefaultListDataConverter<T> {
 	/**
 	 * Constructor
 	 * 
-	 * @param thisClass
+	 * @param genericClass
 	 */
 	public DefaultListDataConverter(Class<T> genericClass) {
 		this.genericClass = genericClass;

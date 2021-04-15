@@ -12,18 +12,19 @@ public class NoOrganizedObjectException extends Exception {
 	/**
 	 * The wrong field
 	 */
-	private Field field;
+	private final transient Field field;
 	
 	/**
 	 * The class in which the wrong field is in
 	 */
-	private Class<?> buildClass;
+	private final Class<?> buildClass;
 	
 	public NoOrganizedObjectException(Field field, Class<?> buildClass) {
 		this.field = field;
 		this.buildClass = buildClass;
 	}
-	
+
+	@Override
 	public String toString() {
 		return "NoOrganizedObjectException: Field" + field.getName() + " in build class " + buildClass.getSimpleName() + " has no OrganizedObject annotation!";
 	}

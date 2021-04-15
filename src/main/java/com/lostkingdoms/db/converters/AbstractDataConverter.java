@@ -9,9 +9,9 @@ package com.lostkingdoms.db.converters;
  */
 public abstract class AbstractDataConverter<T> {
 
-	private Class<T> thisClass;
+	private final Class<T> thisClass;
 	
-	public AbstractDataConverter(Class<T> thisClass) {
+	protected AbstractDataConverter(Class<T> thisClass) {
 		this.thisClass = thisClass;
 	}
 	

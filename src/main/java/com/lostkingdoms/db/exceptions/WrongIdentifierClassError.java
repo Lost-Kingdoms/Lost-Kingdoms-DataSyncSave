@@ -10,18 +10,19 @@ public class WrongIdentifierClassError extends Error {
 	/**
 	 * The reason for this exception
 	 */
-	private Class<?> reason;
+	private final Class<?> reason;
 	
 	/**
 	 * The reason for this exception
 	 */
-	private Class<?> identifier;
+	private final Class<?> identifier;
 	
 	public WrongIdentifierClassError(Class<?> clazz, Class<?> identifier) {
 		this.reason = clazz;
 		this.identifier = identifier;
 	}
-	
+
+	@Override
 	public String toString() {
 		return "WrongIdentifierClassError: Class" + reason.getSimpleName() + " has identifier class " + identifier.getSimpleName() + ". Only String, UUID or Enum allowed!";
 	}

@@ -36,7 +36,8 @@ public class DefaultMapDataConverter<K, V> {
 	/**
 	 * Constructor
 	 * 
-	 * @param thisClass
+	 * @param genericClass1
+	 * @param genericClass2
 	 */
 	public DefaultMapDataConverter(Class<K> genericClass1, Class<V> genericClass2) {
 		this.genericClass1 = genericClass1;

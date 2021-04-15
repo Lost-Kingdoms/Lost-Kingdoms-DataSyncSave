@@ -10,7 +10,7 @@ public class NoIdentifierError extends Error {
 	/**
 	 * The reason for this exception
 	 */
-	private Class<?> reason;
+	private final Class<?> reason;
 	
 	
 	public NoIdentifierError(Class<?> clazz) {
