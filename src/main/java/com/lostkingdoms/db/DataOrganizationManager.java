@@ -89,8 +89,11 @@ public final class DataOrganizationManager {
 			try {
 				Properties properties = new Properties();
 				properties.setProperty("mongodb_name", "lostkingdoms");
+				mongoDBName = "lostkingdoms";
 				properties.setProperty("redis_database_number", "0");
-				properties.setProperty("sync_message_channel_name", "LostKingdoms_Sync");
+				redisDBNumber = 15;
+				properties.setProperty("sync_message_channel_name", "lostkingdoms_sync");
+				syncMessageChannel = "lostkingdoms_sync";
 				properties.storeToXML(new FileOutputStream("database_config.xml"), "");
 				LKLogger.getInstance().info("Default database config created", LogType.STARTUP);
 			} catch (Exception e2) {
