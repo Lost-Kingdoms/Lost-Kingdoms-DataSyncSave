@@ -1,7 +1,10 @@
 package com.lostkingdoms.db;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import com.lostkingdoms.db.converters.AbstractDataConverter;
@@ -41,8 +44,18 @@ public final class DataOrganizationManager {
 	/**
 	 * Name of the redis syncing channel
 	 */
-	public static final String SYNC_MESSAGE_CHANNEL = "LostKingdoms_Sync";
-	
+	public static String syncMessageChannel;
+
+	/**
+	 * The name of the mongodb
+	 */
+	public static String mongoDBName;
+
+	/**
+	 * The number of the redis database
+	 */
+	public static int redisDBNumber;
+
 	/**
 	 * Array of timestamps for all hashslots
 	 */
@@ -52,7 +65,7 @@ public final class DataOrganizationManager {
 	 * The list of all registered converters
 	 */
 	private Map<Class<?>, AbstractDataConverter<?>> converters;
-	
+
 	/**
 	 * The UUID that identifies this cache instance
 	 */
@@ -62,9 +75,29 @@ public final class DataOrganizationManager {
 	 * Constructor of the {@link DataOrganizationManager}
 	 */
 	private DataOrganizationManager() {
-		LKLogger.getInstance().setLevel(LogLevel.DEBUG);
+		LKLogger.getInstance().setLevel(LogLevel.INFO);
 		LKLogger.getInstance().setLogType(LogType.ALL);
-		
+
+		try {
+			Properties properties = new Properties();
+			properties.loadFromXML(new FileInputStream("database_config.xml"));
+			mongoDBName = properties.getProperty("mongodb_name");
+			redisDBNumber = Integer.parseInt(properties.getProperty("redis_database_number"));
+			syncMessageChannel = properties.getProperty("sync_message_channel_name");
+			LKLogger.getInstance().info("Database config loaded", LogType.STARTUP);
+		} catch (Exception e) {
+			try {
+				Properties properties = new Properties();
+				properties.setProperty("mongodb_name", "lostkingdoms");
+				properties.setProperty("redis_database_number", "0");
+				properties.setProperty("sync_message_channel_name", "LostKingdoms_Sync");
+				properties.storeToXML(new FileOutputStream("database_config.xml"), "");
+				LKLogger.getInstance().info("Default database config created", LogType.STARTUP);
+			} catch (Exception e2) {
+				LKLogger.getInstance().error("Config file could not be created", LogType.STARTUP);
+			}
+		}
+
 		LKLogger.getInstance().info("Lost-Kingdoms-DataSync Starting", LogType.STARTUP);
 		LKLogger.getInstance().info("MongoDB starting up", LogType.STARTUP);
 		MongoDBFactory.getInstance();
@@ -82,7 +115,7 @@ public final class DataOrganizationManager {
 				LKLogger.getInstance().info("Jedis succesfully started", LogType.STARTUP);
 
 				LKLogger.getInstance().debug("Sync Listener subscribed", LogType.STARTUP);
-				jedis.subscribe(new DataSyncListener(), SYNC_MESSAGE_CHANNEL);
+				jedis.subscribe(new DataSyncListener(), syncMessageChannel);
 
 				LKLogger.getInstance().warn("Sync Listener closed!", LogType.STARTUP);
 				jedis.quit();

@@ -106,7 +106,7 @@ public abstract class OrganizedDataObject<T> {
 	 */
 	protected void sendSyncMessage(Jedis jedis) {
 		if (getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
-			jedis.publish(DataOrganizationManager.SYNC_MESSAGE_CHANNEL,
+			jedis.publish(DataOrganizationManager.syncMessageChannel,
 					new DataSyncMessage(DataOrganizationManager.getInstance().getInstanceID(), dataKey.getHashslot()).serialize());
 		}
 	}

@@ -1,5 +1,6 @@
 package com.lostkingdoms.db.factories;
 
+import com.lostkingdoms.db.DataOrganizationManager;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -51,7 +52,9 @@ public final class JedisFactory {
      * @return A {@link Jedis} instance
      */
     public Jedis getJedis() {
-    	return jedisPool.getResource();
+    	Jedis jedis =  jedisPool.getResource();
+        jedis.select(DataOrganizationManager.redisDBNumber);
+        return jedis;
     }
 
     /**

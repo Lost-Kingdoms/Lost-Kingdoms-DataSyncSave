@@ -15,7 +15,7 @@ public final class DataSyncListener extends JedisPubSub {
 	@Override
 	public void onMessage(String channel, String message) {
 		//If channel is the sync message channel
-		if(channel.equals(DataOrganizationManager.SYNC_MESSAGE_CHANNEL)) {
+		if(channel.equals(DataOrganizationManager.syncMessageChannel)) {
 			DataSyncMessage syncMessage = DataSyncMessage.deserialize(message);
 
 			//If message is not self sent

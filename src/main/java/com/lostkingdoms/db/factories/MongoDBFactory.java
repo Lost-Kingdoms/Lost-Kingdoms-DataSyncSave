@@ -2,6 +2,7 @@ package com.lostkingdoms.db.factories;
 
 import java.net.UnknownHostException;
 
+import com.lostkingdoms.db.DataOrganizationManager;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 
@@ -18,10 +19,6 @@ public final class MongoDBFactory {
 	
 	/** The thread save {@link MongoClient} */
 	private MongoClient mongoClient;
-	
-	/** The name of the database */
-	private static final String DATABASE_NAME = "lostkingdoms";
-	
 	
 	
 	/**
@@ -56,7 +53,7 @@ public final class MongoDBFactory {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		return getMongoClient().getDB(DATABASE_NAME);
+		return getMongoClient().getDB(DataOrganizationManager.mongoDBName);
 	}
 	
 	 /**
