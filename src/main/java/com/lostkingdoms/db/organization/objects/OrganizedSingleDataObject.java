@@ -11,6 +11,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
+import org.bson.types.ObjectId;
 import redis.clients.jedis.Jedis;
 
 import javax.annotation.Nullable;
@@ -203,6 +204,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					} else {
 						if (!dataString.equals("")) {
 							BasicDBObject create = new BasicDBObject();
+							create.put("_id", dataKey.getMongoDBIdentifier());
 							create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 							create.put(dataKey.getMongoDBValue(), dataString);
 
