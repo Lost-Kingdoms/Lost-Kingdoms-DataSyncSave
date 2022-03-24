@@ -44,6 +44,8 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		setDataKey(dataKey);
 		this.converter = converter;
 		setOrganizationType(organizationType);
+
+		new Thread(this::get).start();
 	}
 	
 	/**
@@ -54,16 +56,15 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	 */
 	@Nullable
 	public T get() {
-		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
-			DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
-			long newTimestamp = System.currentTimeMillis() - 1;
+		// If data is up-to-date
+		int hashslot = getDataKey().getHashslot();
+		if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
+				|| getOrganizationType() == OrganizationType.NONE) {
+			return getData();
+		}
 
-			// If data is up-to-date
-			int hashslot = getDataKey().getHashslot();
-			if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
-					|| getOrganizationType() == OrganizationType.NONE) {
-				return getData();
-			}
+		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
+			long newTimestamp = System.currentTimeMillis() - 1;
 
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
@@ -90,38 +91,41 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 
 			// Data in global cache is null
 			// Try to get data from MongoDB
-			DataKey dataKey = getDataKey();
+			if (getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {
+				DataKey dataKey = getDataKey();
+				DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
 
-			DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
-			BasicDBObject query = new BasicDBObject();
-			query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+				DBCollection collection = mongodb.getCollection(dataKey.getMongoDBCollection());
+				BasicDBObject query = new BasicDBObject();
+				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-			DBObject object = collection.findOne(query);
+				DBObject object = collection.findOne(query);
 
-			if (object != null) {
-				dataString = (String) object.get(dataKey.getMongoDBValue());
-			}
-
-			//Check if data is null
-			if (dataString != null) {
-				//Convert the data
-				T newData = converter.convertFromDatabase(dataString);
-
-				//Conversion failed
-				if (newData == null) {
-					return null;
+				if (object != null) {
+					dataString = (String) object.get(dataKey.getMongoDBValue());
 				}
 
-				//Set the new data
-				setData(newData);
+				//Check if data is null
+				if (dataString != null) {
+					//Convert the data
+					T newData = converter.convertFromDatabase(dataString);
 
-				//Update timestamp to indicate when data was last updated
-				updateTimestamp(newTimestamp);
+					//Conversion failed
+					if (newData == null) {
+						return null;
+					}
 
-				//Push data to Redis
-				jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+					//Set the new data
+					setData(newData);
 
-				return getData();
+					//Update timestamp to indicate when data was last updated
+					updateTimestamp(newTimestamp);
+
+					//Push data to Redis
+					jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+
+					return getData();
+				}
 			}
 
 			return null;
@@ -135,77 +139,81 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	 * @param data the data to set
 	 */
 	public void set(T data) {
-		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
-			DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
-			long newTimestamp = System.currentTimeMillis() - 1;
+		long newTimestamp = System.currentTimeMillis() - 1;
 
-			//Update the timestamp for last change
-			updateTimestamp(newTimestamp);
+		//Update the timestamp for last change
+		updateTimestamp(newTimestamp);
 
-			//Get the data key
-			DataKey dataKey = getDataKey();
+		// Send to Cache and DB
+		new Thread(() -> {
+			try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 
-			//Conversion to redis and mongoDB
-			String dataString = converter.convertToDatabase(data);
-			if (dataString == null) {
-				return;
-			}
+				//Get the data key
+				DataKey dataKey = getDataKey();
 
-			//Update to redis
-			if (getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
-				if (dataString.equals("")) {
-					jedis.del(dataKey.getRedisKey());
-				} else {
-					jedis.set(dataKey.getRedisKey(), dataString);
+				//Conversion to redis and mongoDB
+				String dataString = converter.convertToDatabase(data);
+				if (dataString == null) {
+					return;
 				}
-			}
 
-			//Update to MongoDB
-			if (getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {
-				DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
+				//Update to redis
+				if (getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
+					if (dataString.equals("")) {
+						jedis.del(dataKey.getRedisKey());
+					} else {
+						jedis.set(dataKey.getRedisKey(), dataString);
+					}
+				}
 
-				//Test if object already exists
-				BasicDBObject query = new BasicDBObject();
-				query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+				//Update to MongoDB
+				if (getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {
+					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
+					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-				DBObject object = collection.findOne(query);
-				if (object != null) {
-					query = new BasicDBObject();
+					//Test if object already exists
+					BasicDBObject query = new BasicDBObject();
 					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					BasicDBObject update;
-					if (dataString.equals("")) {
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), "");
+					DBObject object = collection.findOne(query);
+					if (object != null) {
+						query = new BasicDBObject();
+						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						update = new BasicDBObject();
-						update.put("$unset", newDoc);
+						BasicDBObject update;
+						if (dataString.equals("")) {
+							BasicDBObject newDoc = new BasicDBObject();
+							newDoc.put(dataKey.getMongoDBValue(), "");
+
+							update = new BasicDBObject();
+							update.put("$unset", newDoc);
+						} else {
+							BasicDBObject newDoc = new BasicDBObject();
+							newDoc.put(dataKey.getMongoDBValue(), dataString);
+
+							update = new BasicDBObject();
+							update.put("$set", newDoc);
+						}
+
+						collection.update(query, update);
 					} else {
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), dataString);
+						if (!dataString.equals("")) {
+							BasicDBObject create = new BasicDBObject();
+							create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							create.put(dataKey.getMongoDBValue(), dataString);
 
-						update = new BasicDBObject();
-						update.put("$set", newDoc);
-					}
-
-					collection.update(query, update);
-				} else {
-					if (!dataString.equals("")) {
-						BasicDBObject create = new BasicDBObject();
-						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-						create.put(dataKey.getMongoDBValue(), dataString);
-
-						collection.insert(create);
+							collection.insert(create);
+						}
 					}
 				}
+
+				//Publish to other servers via redis
+				sendSyncMessage(jedis);
 			}
+		}).start();
 
-			//Publish to other servers via redis
-			sendSyncMessage(jedis);
-
-			//Set the local data
-			setData(data);
-		}
+		//Set the local data
+		setData(data);
 	}
 
 }
