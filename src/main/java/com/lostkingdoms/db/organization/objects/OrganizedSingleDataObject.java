@@ -63,8 +63,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			return getData();
 		}
 
-		System.out.println("" + ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
-				|| getOrganizationType() == OrganizationType.NONE) + "  "+ getData());
+		System.out.println("  " + this + " " + getDataKey().getRedisKey() + "   " + getData());
 
 		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 			long newTimestamp = System.currentTimeMillis() - 1;
