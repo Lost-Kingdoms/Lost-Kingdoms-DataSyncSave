@@ -58,6 +58,8 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	public T get() {
 		// If data is up-to-date
 		int hashslot = getDataKey().getHashslot();
+		System.out.println("" + this.getDataKey() + "  " + ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
+				|| getOrganizationType() == OrganizationType.NONE) + "  "+ getData());
 		if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
 				|| getOrganizationType() == OrganizationType.NONE) {
 			return getData();
