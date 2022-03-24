@@ -6,10 +6,7 @@ import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import com.mongodb.*;
 
 import org.bson.types.ObjectId;
 import redis.clients.jedis.Jedis;
@@ -158,10 +155,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					return;
 				}
 
-				if (dataKey.getRedisKey().contains("region")) {
-					System.out.println("TEST " + dataKey.getRedisKey() + " " + dataKey.getMongoDBCollection() + " " + dataKey.getMongoDBValue() + " " + dataKey.getMongoDBIdentifier() + " " + this + " " + data);
-				}
-
 				//Update to redis
 				if (getOrganizationType() == OrganizationType.SYNC || getOrganizationType() == OrganizationType.BOTH) {
 					if (dataString.equals("")) {
@@ -176,40 +169,46 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					//Test if object already exists
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							//Test if object already exists
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					DBObject object = collection.findOne(query);
-					if (object != null) {
-						query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							DBObject object = collection.findOne(query);
 
-						BasicDBObject update;
-						if (dataString.equals("")) {
-							BasicDBObject newDoc = new BasicDBObject();
-							newDoc.put(dataKey.getMongoDBValue(), "");
+							if (object != null) {
+								query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-							update = new BasicDBObject();
-							update.put("$unset", newDoc);
-						} else {
-							BasicDBObject newDoc = new BasicDBObject();
-							newDoc.put(dataKey.getMongoDBValue(), dataString);
+								BasicDBObject update;
+								if (dataString.equals("")) {
+									BasicDBObject newDoc = new BasicDBObject();
+									newDoc.put(dataKey.getMongoDBValue(), "");
 
-							update = new BasicDBObject();
-							update.put("$set", newDoc);
-						}
+									update = new BasicDBObject();
+									update.put("$unset", newDoc);
+								} else {
+									BasicDBObject newDoc = new BasicDBObject();
+									newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-						collection.update(query, update);
-					} else {
-						if (!dataString.equals("")) {
-							BasicDBObject create = new BasicDBObject();
-							create.put("_id", dataKey.getMongoDBIdentifier());
-							create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-							create.put(dataKey.getMongoDBValue(), dataString);
+									update = new BasicDBObject();
+									update.put("$set", newDoc);
+								}
 
-							collection.insert(create);
-						}
+								collection.update(query, update);
+							} else {
+								if (!dataString.equals("")) {
+									BasicDBObject create = new BasicDBObject();
+									create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+									create.put(dataKey.getMongoDBValue(), dataString);
+
+									collection.insert(create);
+								}
+							}
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
 					}
 				}
 

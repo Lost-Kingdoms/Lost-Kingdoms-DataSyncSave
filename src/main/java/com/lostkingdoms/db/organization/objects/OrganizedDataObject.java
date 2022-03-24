@@ -16,7 +16,7 @@ import redis.clients.jedis.Jedis;
 public abstract class OrganizedDataObject<T> {
 
 	/** The String used in MongoDB for the identifier*/
-	protected static final String IDENTIFIER = "identifier";
+	protected static final String IDENTIFIER = "_id";
 	
 	/** The time when the list was last updated */
 	private long timestamp;

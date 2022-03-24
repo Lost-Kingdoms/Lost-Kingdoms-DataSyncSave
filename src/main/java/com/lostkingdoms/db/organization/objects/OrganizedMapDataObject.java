@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mongodb.*;
 import org.bson.types.ObjectId;
 
 import com.lostkingdoms.db.DataOrganizationManager;
@@ -12,10 +13,6 @@ import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 
 import redis.clients.jedis.Jedis;
 
@@ -166,29 +163,36 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					//Test if object already exists
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							//Test if object already exists
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					DBObject object = collection.findOne(query);
-					if (object != null) {
-						query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							DBObject object = collection.findOne(query);
+							if (object != null) {
+								query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), dataString);
+								BasicDBObject newDoc = new BasicDBObject();
+								newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-						BasicDBObject update = new BasicDBObject();
-						update.put("$set", newDoc);
+								BasicDBObject update = new BasicDBObject();
+								update.put("$set", newDoc);
 
-						collection.update(query, update);
-					} else {
-						BasicDBObject create = new BasicDBObject();
-						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-						create.put(dataKey.getMongoDBValue(), dataString);
+								collection.update(query, update);
+							} else {
+								BasicDBObject create = new BasicDBObject();
+								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(dataKey.getMongoDBValue(), dataString);
 
-						collection.insert(create);
+								collection.insert(create);
+							}
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
 					}
+
 				}
 
 				//Publish to other servers via redis
@@ -249,28 +253,34 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					//Test if object already exists
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							//Test if object already exists
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					DBObject object = collection.findOne(query);
-					if (object != null) {
-						query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							DBObject object = collection.findOne(query);
+							if (object != null) {
+								query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), dataString);
+								BasicDBObject newDoc = new BasicDBObject();
+								newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-						BasicDBObject update = new BasicDBObject();
-						update.put("$set", newDoc);
+								BasicDBObject update = new BasicDBObject();
+								update.put("$set", newDoc);
 
-						collection.update(query, update);
-					} else {
-						BasicDBObject create = new BasicDBObject();
-						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-						create.put(dataKey.getMongoDBValue(), dataString);
+								collection.update(query, update);
+							} else {
+								BasicDBObject create = new BasicDBObject();
+								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(dataKey.getMongoDBValue(), dataString);
 
-						collection.insert(create);
+								collection.insert(create);
+							}
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
 					}
 				}
 
@@ -331,30 +341,36 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 						DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 						DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-						//Test if object already exists
-						BasicDBObject query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+						while (true) {
+							try {
+								//Test if object already exists
+								BasicDBObject query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						DBObject object = collection.findOne(query);
-						if (object != null) {
-							query = new BasicDBObject();
-							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								DBObject object = collection.findOne(query);
+								if (object != null) {
+									query = new BasicDBObject();
+									query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-							BasicDBObject newDoc = new BasicDBObject();
-							newDoc.put(dataKey.getMongoDBValue(), dataString);
+									BasicDBObject newDoc = new BasicDBObject();
+									newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-							BasicDBObject update = new BasicDBObject();
-							update.put("$set", newDoc);
+									BasicDBObject update = new BasicDBObject();
+									update.put("$set", newDoc);
 
-							collection.update(query, update);
-						} else {
-							BasicDBObject create = new BasicDBObject();
-							create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-							create.put(dataKey.getMongoDBValue(), dataString);
+									collection.update(query, update);
+								} else {
+									BasicDBObject create = new BasicDBObject();
+									create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+									create.put(dataKey.getMongoDBValue(), dataString);
 
-							collection.insert(create);
+									collection.insert(create);
+								}
+
+								break;
+							} catch (DuplicateKeyException ignored) {}
 						}
-					}
+											}
 
 					//Publish to other servers via redis
 					sendSyncMessage(jedis);
@@ -381,23 +397,29 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 				DataKey dataKey = getDataKey();
 
 				//Delete from Redis
-				if (jedis != null) jedis.del(dataKey.getRedisKey());
+				jedis.del(dataKey.getRedisKey());
 
 				//Delete from MongoDB
 				if (getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, new ObjectId(dataKey.getMongoDBIdentifier()));
+					while (true) {
+						try {
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, new ObjectId(dataKey.getMongoDBIdentifier()));
 
-					BasicDBObject newDoc = new BasicDBObject();
-					newDoc.put(dataKey.getMongoDBValue(), "");
+							BasicDBObject newDoc = new BasicDBObject();
+							newDoc.put(dataKey.getMongoDBValue(), "");
 
-					BasicDBObject update = new BasicDBObject();
-					update.put("$set", newDoc);
+							BasicDBObject update = new BasicDBObject();
+							update.put("$set", newDoc);
 
-					collection.update(query, update);
+							collection.update(query, update);
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
+					}
 				}
 
 				//Publish to other servers via redis

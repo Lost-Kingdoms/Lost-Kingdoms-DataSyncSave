@@ -10,10 +10,7 @@ import com.lostkingdoms.db.factories.JedisFactory;
 import com.lostkingdoms.db.factories.MongoDBFactory;
 import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import com.mongodb.*;
 
 import redis.clients.jedis.Jedis;
 
@@ -169,28 +166,34 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					//Test if object already exists
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							//Test if object already exists
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					DBObject object = collection.findOne(query);
-					if (object != null) {
-						query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							DBObject object = collection.findOne(query);
+							if (object != null) {
+								query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), dataString);
+								BasicDBObject newDoc = new BasicDBObject();
+								newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-						BasicDBObject update = new BasicDBObject();
-						update.put("$set", newDoc);
+								BasicDBObject update = new BasicDBObject();
+								update.put("$set", newDoc);
 
-						collection.update(query, update);
-					} else {
-						BasicDBObject create = new BasicDBObject();
-						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-						create.put(dataKey.getMongoDBValue(), dataString);
+								collection.update(query, update);
+							} else {
+								BasicDBObject create = new BasicDBObject();
+								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(dataKey.getMongoDBValue(), dataString);
 
-						collection.insert(create);
+								collection.insert(create);
+							}
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
 					}
 				}
 
@@ -250,28 +253,34 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					//Test if object already exists
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							//Test if object already exists
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					DBObject object = collection.findOne(query);
-					if (object != null) {
-						query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							DBObject object = collection.findOne(query);
+							if (object != null) {
+								query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), dataString);
+								BasicDBObject newDoc = new BasicDBObject();
+								newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-						BasicDBObject update = new BasicDBObject();
-						update.put("$set", newDoc);
+								BasicDBObject update = new BasicDBObject();
+								update.put("$set", newDoc);
 
-						collection.update(query, update);
-					} else {
-						BasicDBObject create = new BasicDBObject();
-						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-						create.put(dataKey.getMongoDBValue(), dataString);
+								collection.update(query, update);
+							} else {
+								BasicDBObject create = new BasicDBObject();
+								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(dataKey.getMongoDBValue(), dataString);
 
-						collection.insert(create);
+								collection.insert(create);
+							}
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
 					}
 				}
 
@@ -332,28 +341,34 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 						DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 						DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-						//Test if object already exists
-						BasicDBObject query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+						while (true) {
+							try {
+								//Test if object already exists
+								BasicDBObject query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						DBObject object = collection.findOne(query);
-						if (object != null) {
-							query = new BasicDBObject();
-							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								DBObject object = collection.findOne(query);
+								if (object != null) {
+									query = new BasicDBObject();
+									query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-							BasicDBObject newDoc = new BasicDBObject();
-							newDoc.put(dataKey.getMongoDBValue(), dataString);
+									BasicDBObject newDoc = new BasicDBObject();
+									newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-							BasicDBObject update = new BasicDBObject();
-							update.put("$set", newDoc);
+									BasicDBObject update = new BasicDBObject();
+									update.put("$set", newDoc);
 
-							collection.update(query, update);
-						} else {
-							BasicDBObject create = new BasicDBObject();
-							create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-							create.put(dataKey.getMongoDBValue(), dataString);
+									collection.update(query, update);
+								} else {
+									BasicDBObject create = new BasicDBObject();
+									create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+									create.put(dataKey.getMongoDBValue(), dataString);
 
-							collection.insert(create);
+									collection.insert(create);
+								}
+
+								break;
+							} catch (DuplicateKeyException ignored) {}
 						}
 					}
 
@@ -389,16 +404,22 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					BasicDBObject newDoc = new BasicDBObject();
-					newDoc.put(dataKey.getMongoDBValue(), "");
+							BasicDBObject newDoc = new BasicDBObject();
+							newDoc.put(dataKey.getMongoDBValue(), "");
 
-					BasicDBObject update = new BasicDBObject();
-					update.put("$set", newDoc);
+							BasicDBObject update = new BasicDBObject();
+							update.put("$set", newDoc);
 
-					collection.update(query, update);
+							collection.update(query, update);
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
+					}
 				}
 
 				//Publish to other servers via redis
@@ -479,28 +500,34 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 					DB mongoDB = MongoDBFactory.getInstance().getMongoDatabase();
 					DBCollection collection = mongoDB.getCollection(dataKey.getMongoDBCollection());
 
-					//Test if object already exists
-					BasicDBObject query = new BasicDBObject();
-					query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+					while (true) {
+						try {
+							//Test if object already exists
+							BasicDBObject query = new BasicDBObject();
+							query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-					DBObject object = collection.findOne(query);
-					if (object != null) {
-						query = new BasicDBObject();
-						query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+							DBObject object = collection.findOne(query);
+							if (object != null) {
+								query = new BasicDBObject();
+								query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
-						BasicDBObject newDoc = new BasicDBObject();
-						newDoc.put(dataKey.getMongoDBValue(), dataString);
+								BasicDBObject newDoc = new BasicDBObject();
+								newDoc.put(dataKey.getMongoDBValue(), dataString);
 
-						BasicDBObject update = new BasicDBObject();
-						update.put("$set", newDoc);
+								BasicDBObject update = new BasicDBObject();
+								update.put("$set", newDoc);
 
-						collection.update(query, update);
-					} else {
-						BasicDBObject create = new BasicDBObject();
-						create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
-						create.put(dataKey.getMongoDBValue(), dataString);
+								collection.update(query, update);
+							} else {
+								BasicDBObject create = new BasicDBObject();
+								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(dataKey.getMongoDBValue(), dataString);
 
-						collection.insert(create);
+								collection.insert(create);
+							}
+
+							break;
+						} catch (DuplicateKeyException ignored) {}
 					}
 				}
 
