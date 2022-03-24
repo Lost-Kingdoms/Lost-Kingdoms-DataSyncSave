@@ -128,10 +128,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				}
 			}
 
-			if (getData() == null) {
-				updateTimestamp(newTimestamp);
-			}
-
 			return null;
 		}
 	}
