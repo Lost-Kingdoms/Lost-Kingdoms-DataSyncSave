@@ -71,7 +71,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			String dataString = jedis.get(getDataKey().getRedisKey());
 
 			// Check if data is null
-			System.out.println("Pre Redis  " + this + "  " + getDataKey().getMongoDBCollection() + "  " + getDataKey().getMongoDBValue() + " " + getDataKey().getRedisKey() + "   " + getData() + "  " + getTimestamp());
 			if (dataString != null) {
 				//Convert the data
 				T newData = converter.convertFromDatabase(dataString);
