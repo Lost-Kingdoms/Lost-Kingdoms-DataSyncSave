@@ -157,7 +157,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					return;
 				}
 
-				if (dataKey.getRedisKey().contentEquals("region")) {
+				if (dataKey.getRedisKey().contains("region")) {
 					System.out.println("TEST " + dataKey.getRedisKey() + " " + dataKey.getMongoDBCollection() + " " + dataKey.getMongoDBValue() + " " + dataKey.getMongoDBIdentifier() + " " + this + " " + data);
 				}
 
