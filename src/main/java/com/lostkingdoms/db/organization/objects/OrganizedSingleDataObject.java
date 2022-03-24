@@ -63,8 +63,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			return getData();
 		}
 
-		System.out.println("  " + this + " " + getDataKey().getRedisKey() + "   " + getData());
-
 		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 			long newTimestamp = System.currentTimeMillis() - 1;
 
@@ -73,6 +71,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			String dataString = jedis.get(getDataKey().getRedisKey());
 
 			// Check if data is null
+			System.out.println("Pre Redis  " + this + "  " + dataString + " " + getDataKey().getRedisKey() + "   " + getData() + "  " + getTimestamp());
 			if (dataString != null) {
 				//Convert the data
 				T newData = converter.convertFromDatabase(dataString);
@@ -93,6 +92,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 
 			// Data in global cache is null
 			// Try to get data from MongoDB
+			System.out.println("Pre Mongo  " + this + "  " + dataString + " " + getDataKey().getRedisKey() + "   " + getData() + "  " + getTimestamp());
 			if (getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {
 				DataKey dataKey = getDataKey();
 				DB mongodb = MongoDBFactory.getInstance().getMongoDatabase();
@@ -129,6 +129,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					return getData();
 				}
 			}
+			System.out.println("After all  " + this + "  " + dataString + " " + getDataKey().getRedisKey() + "   " + getData() + "  " + getTimestamp());
 
 			return null;
 		}
