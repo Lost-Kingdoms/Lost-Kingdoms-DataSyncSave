@@ -58,12 +58,13 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 	public T get() {
 		// If data is up-to-date
 		int hashslot = getDataKey().getHashslot();
-		System.out.println("" + this.getDataKey() + "  " + ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
-				|| getOrganizationType() == OrganizationType.NONE) + "  "+ getData());
 		if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
 				|| getOrganizationType() == OrganizationType.NONE) {
 			return getData();
 		}
+
+		System.out.println("" + ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
+				|| getOrganizationType() == OrganizationType.NONE) + "  "+ getData().getClass().getSimpleName());
 
 		try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 			long newTimestamp = System.currentTimeMillis() - 1;
