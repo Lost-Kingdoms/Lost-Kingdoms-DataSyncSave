@@ -187,6 +187,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 							} else {
 								BasicDBObject create = new BasicDBObject();
 								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 								create.put(dataKey.getMongoDBValue(), dataString);
 
 								collection.insert(create);
@@ -274,6 +275,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 							} else {
 								BasicDBObject create = new BasicDBObject();
 								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 								create.put(dataKey.getMongoDBValue(), dataString);
 
 								collection.insert(create);
@@ -362,6 +364,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 								} else {
 									BasicDBObject create = new BasicDBObject();
 									create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+									create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 									create.put(dataKey.getMongoDBValue(), dataString);
 
 									collection.insert(create);
@@ -521,6 +524,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 							} else {
 								BasicDBObject create = new BasicDBObject();
 								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 								create.put(dataKey.getMongoDBValue(), dataString);
 
 								collection.insert(create);

@@ -201,6 +201,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 								if (!dataString.equals("")) {
 									BasicDBObject create = new BasicDBObject();
 									create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+									create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 									create.put(dataKey.getMongoDBValue(), dataString);
 
 									collection.insert(create);

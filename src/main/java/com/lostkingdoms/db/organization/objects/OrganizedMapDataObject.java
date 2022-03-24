@@ -184,6 +184,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 							} else {
 								BasicDBObject create = new BasicDBObject();
 								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 								create.put(dataKey.getMongoDBValue(), dataString);
 
 								collection.insert(create);
@@ -274,6 +275,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 							} else {
 								BasicDBObject create = new BasicDBObject();
 								create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+								create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 								create.put(dataKey.getMongoDBValue(), dataString);
 
 								collection.insert(create);
@@ -362,6 +364,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 								} else {
 									BasicDBObject create = new BasicDBObject();
 									create.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
+									create.put(MONGO_IDENTIFIER, dataKey.getMongoDBIdentifier());
 									create.put(dataKey.getMongoDBValue(), dataString);
 
 									collection.insert(create);
