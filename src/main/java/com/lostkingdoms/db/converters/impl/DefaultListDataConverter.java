@@ -56,23 +56,26 @@ public class DefaultListDataConverter<T> {
 		ArrayList<T> newList = new ArrayList<>();
 
 		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
-			for(String o : ((List<String>)obj)) {
-				String[] sub = o.split(":");
-				
-				AbstractDataConverter<?> converter = null;
-				if(sub.length != 1) {
-					try {
-						converter = dataOrganizationManager.getDataConverter(Class.forName(sub[1]));
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
+			if (obj != null) {
+				for (String o : ((List<String>) obj)) {
+					String[] sub = o.split(":");
+
+					AbstractDataConverter<?> converter = null;
+					if (sub.length != 1) {
+						try {
+							converter = dataOrganizationManager.getDataConverter(Class.forName(sub[1]));
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
+					} else {
+						converter = dataOrganizationManager.getDataConverter(this.genericClass);
 					}
-				} else {
-					converter = dataOrganizationManager.getDataConverter(this.genericClass);
+
+					newList.add((T) converter.convertFromDatabase(sub[0]));
 				}
-				
-				newList.add((T) converter.convertFromDatabase(sub[0]));
 			}
 		}
+
 
 		if(!newList.isEmpty()) return newList;
 		return (ArrayList<T>) obj;

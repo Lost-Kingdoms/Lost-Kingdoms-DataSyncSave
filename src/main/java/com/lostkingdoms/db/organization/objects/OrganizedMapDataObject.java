@@ -133,6 +133,11 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 	}
 	
 	public void setMap(HashMap<K, V> map) {
+		if (map.isEmpty()) {
+			clear();
+			return;
+		}
+
 		long newTimestamp = System.currentTimeMillis() - 1;
 
 		//Update the timestamp for last change
@@ -311,8 +316,13 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 		@SuppressWarnings("unchecked")
 		HashMap<K, V> temp = (HashMap<K, V>) getData().clone();
 		Object change = temp.remove(key);
-		
+
 		if(change != null) {
+			if (temp.isEmpty()) {
+				clear();
+				return;
+			}
+
 			long newTimestamp = System.currentTimeMillis() - 1;
 
 			//Update the timestamp for last change

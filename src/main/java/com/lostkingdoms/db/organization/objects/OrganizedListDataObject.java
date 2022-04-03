@@ -18,7 +18,7 @@ import redis.clients.jedis.Jedis;
  * An {@link OrganizedDataObject} which represents an {@link ArrayList} of type T.
  * Provides basic list methods. Later it is planned to fully implement {@link List} interface
  * 
- * @author Tim Küchler (https://github.com/TimK1998)
+ * @author Tim Kï¿½chler (https://github.com/TimK1998)
  *
  * @param <T> the list class
  */
@@ -135,6 +135,11 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 	 * @param list the list to set
 	 */
 	public void setList(ArrayList<T> list) {
+		if (list.isEmpty()) {
+			clear();
+			return;
+		}
+
 		long newTimestamp = System.currentTimeMillis() - 1;
 
 		//Update the timestamp for last change
@@ -311,8 +316,13 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 		@SuppressWarnings("unchecked")
 		ArrayList<T> temp = (ArrayList<T>) getData().clone();
 		boolean change = temp.remove(element);
-		
-		if(change) {
+
+		if (change) {
+			if (temp.isEmpty()) {
+				clear();
+				return;
+			}
+
 			long newTimestamp = System.currentTimeMillis() - 1;
 
 			//Update the timestamp for last change
@@ -400,7 +410,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				DataKey dataKey = getDataKey();
 
 				//Delete from Redis
-				if (jedis != null) jedis.del(dataKey.getRedisKey());
+				jedis.del(dataKey.getRedisKey());
 
 				//Delete from MongoDB
 				if (getOrganizationType() == OrganizationType.SAVE_TO_DB || getOrganizationType() == OrganizationType.BOTH) {
@@ -472,6 +482,11 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 		@SuppressWarnings("unchecked")
 		ArrayList<T> temp = (ArrayList<T>) getData().clone();
 		temp.set(i, element);
+
+		if (temp.isEmpty()) {
+			clear();
+			return;
+		}
 
 		new Thread(() -> {
 			try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
