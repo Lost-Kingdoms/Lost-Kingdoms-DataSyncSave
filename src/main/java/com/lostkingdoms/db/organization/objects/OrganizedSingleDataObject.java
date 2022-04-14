@@ -129,7 +129,9 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				}
 			}
 
-			DOES_FUCKING_NOT_EXIST = true;
+			if (getDataKey().getRedisKey().contains("polygon")) {
+				DOES_FUCKING_NOT_EXIST = true;
+			}
 			return null;
 		}
 	}
