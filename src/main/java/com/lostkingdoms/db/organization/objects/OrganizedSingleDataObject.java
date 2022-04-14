@@ -59,9 +59,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		}
 		// If data is up-to-date
 		int hashslot = getDataKey().getHashslot();
-		if (getDataKey().getRedisKey().contains("polygon")) {
-			System.out.println("TEEEEEEEEEEEEEST1 " + getData() + "   " + getDataKey().getMongoDBIdentifier());
-		}
 		if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
 				|| getOrganizationType() == OrganizationType.NONE) {
 			return getData();
@@ -73,9 +70,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 			// Data is not up-to-date or null
 			// Try to get data from redis global cache
 			String dataString = jedis.get(getDataKey().getRedisKey());
-			if (getDataKey().getRedisKey().contains("polygon")) {
-				System.out.println("TEEEEEEEEEEEEESTREDIS " + dataString);
-			}
 
 			// Check if data is null
 			if (dataString != null) {
@@ -112,9 +106,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 					dataString = (String) object.get(dataKey.getMongoDBValue());
 				}
 
-				if (getDataKey().getRedisKey().contains("polygon")) {
-					System.out.println("TEEEEEEEEEEEEESTMONGO " + dataString);
-				}
 				//Check if data is null
 				if (dataString != null) {
 					//Convert the data
