@@ -129,7 +129,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				}
 			}
 
-			if (getDataKey().getRedisKey().contains("polygon")) {
+			if (getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("point")) {
 				System.out.println("TEEEEST " + getDataKey().getRedisKey());
 				DOES_FUCKING_NOT_EXIST = true;
 			}
