@@ -18,7 +18,9 @@ public abstract class OrganizedDataObject<T> {
 	/** The String used in MongoDB for the identifier*/
 	protected static final String MONGO_IDENTIFIER = "_id";
 	protected static final String IDENTIFIER = "identifier";
-	
+
+	protected boolean DOES_FUCKING_NOT_EXIST = false;
+
 	/** The time when the list was last updated */
 	private long timestamp;
 	
