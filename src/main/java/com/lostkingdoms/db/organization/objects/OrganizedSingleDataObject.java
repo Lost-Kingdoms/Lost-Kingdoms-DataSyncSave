@@ -41,7 +41,10 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
         this.converter = converter;
         setOrganizationType(organizationType);
 
-        new Thread(this::get).start();
+        // TODO
+        if (!(dataKey.getRedisKey().contains("point") || dataKey.getRedisKey().contains("polygon"))) {
+            new Thread(this::get).start();
+        }
     }
 
     /**

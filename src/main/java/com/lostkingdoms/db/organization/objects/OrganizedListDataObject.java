@@ -42,7 +42,9 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
         this.converter = converter;
         setOrganizationType(organizationType);
         setData(new ArrayList<>());
-        new Thread(this::getList).start();
+        if (!(dataKey.getRedisKey().contains("point") || dataKey.getRedisKey().contains("polygon"))) {
+            new Thread(this::getList).start();
+        }
     }
 
     /**

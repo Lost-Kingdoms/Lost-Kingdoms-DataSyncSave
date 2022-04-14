@@ -45,7 +45,9 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
         this.converter = converter;
         setOrganizationType(organizationType);
         setData(new HashMap<>());
-        new Thread(this::getMap).start();
+        if (!(dataKey.getRedisKey().contains("point") || dataKey.getRedisKey().contains("polygon"))) {
+            new Thread(this::getMap).start();
+        }
     }
 
     /**
