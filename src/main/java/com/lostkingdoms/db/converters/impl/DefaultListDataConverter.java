@@ -76,7 +76,6 @@ public class DefaultListDataConverter<T> {
 			}
 		}
 
-
 		if(!newList.isEmpty()) return newList;
 		return (ArrayList<T>) obj;
 	}

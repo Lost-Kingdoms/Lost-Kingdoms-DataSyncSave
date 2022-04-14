@@ -72,6 +72,10 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				//Convert the data
 				ArrayList<T> newData = (ArrayList<T>) converter.convertFromDatabase(dataString);
 
+				if (getDataKey().getRedisKey().contains("currency")) {
+					System.out.println("TEEEEST1 " + getDataKey().getRedisKey() + "  " + newData);
+				}
+
 				//Conversion failed
 				if (newData == null) {
 					return Collections.unmodifiableList(new ArrayList<>());
@@ -105,6 +109,10 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 				if (dataString != null) {
 					//Convert the data
 					ArrayList<T> newData = (ArrayList<T>) converter.convertFromDatabase(dataString);
+
+					if (getDataKey().getRedisKey().contains("currency")) {
+						System.out.println("TEEEEST2 " + getDataKey().getRedisKey() + "  " + newData);
+					}
 
 					//Conversion failed
 					if (newData == null) {
