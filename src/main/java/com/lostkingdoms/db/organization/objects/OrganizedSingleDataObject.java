@@ -57,7 +57,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 		// If data is up-to-date
 		int hashslot = getDataKey().getHashslot();
 		if (getDataKey().getRedisKey().contains("polygon")) {
-			System.out.println("TEEEEEEEEEEEEEST1 " + (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp()) + "  " + (getTimestamp() != 0) + "   " + getOrganizationType() + "   " + getData());
+			System.out.println("TEEEEEEEEEEEEEST1 " + getData() + "   " + getDataKey().getMongoDBIdentifier());
 		}
 		if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
 				|| getOrganizationType() == OrganizationType.NONE) {
@@ -108,7 +108,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 				if (object != null) {
 					dataString = (String) object.get(dataKey.getMongoDBValue());
 				}
-				
+
 				if (getDataKey().getRedisKey().contains("polygon")) {
 					System.out.println("TEEEEEEEEEEEEESTMONGO " + dataString);
 				}
