@@ -52,7 +52,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
      */
     @Nullable
     public T get() {
-        if (!doesExist) return null;
+        //if (!doesExist) return null;
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();

@@ -53,7 +53,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @return An unmodifiable instance of the {@link List}
      */
     public List<T> getList() {
-        if (!doesExist) return new ArrayList<>();
+        //if (!doesExist) return new ArrayList<>();
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();

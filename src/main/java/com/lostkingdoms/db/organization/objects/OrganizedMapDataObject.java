@@ -56,7 +56,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @return An unmodifiable instance of the {@link Map}
      */
     public Map<K, V> getMap() {
-        if (!doesExist) return new HashMap<>();
+        //if (!doesExist) return new HashMap<>();
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();
