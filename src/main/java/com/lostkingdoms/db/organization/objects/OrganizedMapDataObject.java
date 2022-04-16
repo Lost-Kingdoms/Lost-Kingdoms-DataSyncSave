@@ -45,9 +45,8 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
         this.converter = converter;
         setOrganizationType(organizationType);
         setData(new HashMap<>());
-        if (!(dataKey.getRedisKey().contains("point") || dataKey.getRedisKey().contains("polygon"))) {
-            new Thread(this::getMap).start();
-        }
+
+        //new Thread(this::getMap).start();
     }
 
     /**
@@ -56,7 +55,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @return An unmodifiable instance of the {@link Map}
      */
     public Map<K, V> getMap() {
-        //if (!doesExist) return new HashMap<>();
+        if (!doesExist) return new HashMap<>();
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();

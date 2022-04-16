@@ -42,9 +42,8 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
         this.converter = converter;
         setOrganizationType(organizationType);
         setData(new ArrayList<>());
-        if (!(dataKey.getRedisKey().contains("point") || dataKey.getRedisKey().contains("polygon"))) {
-            new Thread(this::getList).start();
-        }
+
+        //new Thread(this::getList).start();
     }
 
     /**
@@ -53,7 +52,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @return An unmodifiable instance of the {@link List}
      */
     public List<T> getList() {
-        //if (!doesExist) return new ArrayList<>();
+        if (!doesExist) return new ArrayList<>();
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();
