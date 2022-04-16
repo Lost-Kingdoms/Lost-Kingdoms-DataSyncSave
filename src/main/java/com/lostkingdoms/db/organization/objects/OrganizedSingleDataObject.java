@@ -41,10 +41,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
         this.converter = converter;
         setOrganizationType(organizationType);
 
-        // TODO
-        if (!(dataKey.getRedisKey().contains("point") || dataKey.getRedisKey().contains("polygon"))) {
-            new Thread(this::get).start();
-        }
+        new Thread(this::get).start();
     }
 
     /**
@@ -55,9 +52,8 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
      */
     @Nullable
     public T get() {
-        if (DOES_FUCKING_NOT_EXIST) {
-            return null;
-        }
+        if (!doesExist) return null;
+
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();
         if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
@@ -130,10 +126,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
                 }
             }
 
-            if (getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("point")) {
-                System.out.println("TEEEEST " + getDataKey().getRedisKey());
-                DOES_FUCKING_NOT_EXIST = true;
-            }
+            doesExist = false;
             return null;
         }
     }
@@ -145,6 +138,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
      * @param data the data to set
      */
     public void set(T data) {
+        doesExist = true;
         long newTimestamp = System.currentTimeMillis() - 1;
 
         //Update the timestamp for last change
@@ -226,6 +220,10 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
                 sendSyncMessage(jedis);
             }
         }).start();
+
+        if (data == null) {
+            doesExist = false;
+        }
 
         //Set the local data
         setData(data);

@@ -53,10 +53,9 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @return An unmodifiable instance of the {@link List}
      */
     public List<T> getList() {
+        if (!doesExist) return new ArrayList<>();
+
         // If data is up-to-date
-        if (DOES_FUCKING_NOT_EXIST) {
-            return new ArrayList<>();
-        }
         int hashslot = getDataKey().getHashslot();
         if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
                 || getOrganizationType() == OrganizationType.NONE) {
@@ -127,12 +126,9 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 }
             }
 
-            if (getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("point")) {
-                System.out.println("TEEEEST " + getDataKey().getRedisKey());
-                DOES_FUCKING_NOT_EXIST = true;
-            }
             //Data does not exist yet
-            return getData();
+            doesExist = false;
+            return new ArrayList<>();
         }
     }
 
@@ -146,6 +142,8 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
             clear();
             return;
         }
+
+        doesExist = true;
 
         long newTimestamp = System.currentTimeMillis() - 1;
 
@@ -226,6 +224,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @param element The element that will be added to {@link List}
      */
     public void add(T element) {
+        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
@@ -315,6 +314,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @param element The element that will be removed from {@link List}
      */
     public void remove(T element) {
+        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
@@ -409,6 +409,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * Clear the {@link List}
      */
     public void clear() {
+        doesExist = false;
         long newTimestamp = System.currentTimeMillis() - 1;
 
         //Update the timestamp for last change
@@ -483,6 +484,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @param element element to be stored at the specified position
      */
     public void set(int i, T element) {
+        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {

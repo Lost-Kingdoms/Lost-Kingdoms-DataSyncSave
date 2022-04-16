@@ -56,10 +56,9 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @return An unmodifiable instance of the {@link Map}
      */
     public Map<K, V> getMap() {
+        if (!doesExist) return new HashMap<>();
+
         // If data is up-to-date
-        if (DOES_FUCKING_NOT_EXIST) {
-            return new HashMap<>();
-        }
         int hashslot = getDataKey().getHashslot();
         if ((DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() && getTimestamp() != 0)
                 || getOrganizationType() == OrganizationType.NONE) {
@@ -131,10 +130,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
             }
 
             //Data does not exist yet
-            if (getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("point")) {
-                System.out.println("TEEEEST " + getDataKey().getRedisKey());
-                DOES_FUCKING_NOT_EXIST = true;
-            }
+            doesExist = false;
             return getData();
         }
     }
@@ -144,6 +140,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
             clear();
             return;
         }
+        doesExist = true;
 
         long newTimestamp = System.currentTimeMillis() - 1;
 
@@ -225,6 +222,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @param value value to be associated with the specified key
      */
     public void put(K key, V value) {
+        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
@@ -315,6 +313,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @param key key whose mapping is to be removed from the map
      */
     public void remove(K key) {
+        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
@@ -409,6 +408,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * Clear the {@link Map}
      */
     public void clear() {
+        doesExist = false;
         long newTimestamp = System.currentTimeMillis() - 1;
 
         //Update the timestamp for last change

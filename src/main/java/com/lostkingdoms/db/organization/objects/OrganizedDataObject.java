@@ -19,7 +19,7 @@ public abstract class OrganizedDataObject<T> {
 	protected static final String MONGO_IDENTIFIER = "_id";
 	protected static final String IDENTIFIER = "identifier";
 
-	protected boolean DOES_FUCKING_NOT_EXIST = false;
+	protected boolean doesExist = true;
 
 	/** The time when the list was last updated */
 	private long timestamp;
