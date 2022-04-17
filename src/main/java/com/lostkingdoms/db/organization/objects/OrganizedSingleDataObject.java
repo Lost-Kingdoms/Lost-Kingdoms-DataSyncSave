@@ -52,7 +52,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
     @Nullable
     public T get() {
         if (!doesExist) return null;
-        System.out.println("TEST1 " + getDataKey().getRedisKey() + "   " + doesExist);
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();
