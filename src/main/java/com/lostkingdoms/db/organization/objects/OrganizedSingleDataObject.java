@@ -83,7 +83,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 
                 //Update timestamp to indicate when data was last updated
                 updateTimestamp(newTimestamp);
-                
+
                 return getData();
             }
 

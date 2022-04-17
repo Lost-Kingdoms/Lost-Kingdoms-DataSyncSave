@@ -3,6 +3,7 @@ package com.lostkingdoms.db.factories;
 import com.lostkingdoms.db.DataOrganizationManager;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  * Provider class for {@link Jedis Pool} and it's {@link Jedis} instances
@@ -29,11 +30,14 @@ public final class JedisFactory {
 	 * Initiates the jedis connection and pool.
 	 */
     private JedisFactory() {
-        //JedisPoolConfig poolConfig = new JedisPoolConfig();
-        
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxWaitMillis(50);
+
         jedisPool = new JedisPool(
+                poolConfig,
                 "127.0.0.1",
-                6379
+                6379,
+                50
             );
     }
 
