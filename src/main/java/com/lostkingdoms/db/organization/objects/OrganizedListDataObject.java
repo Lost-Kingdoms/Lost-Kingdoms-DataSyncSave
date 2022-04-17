@@ -130,6 +130,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 System.out.println("--------------------------------DUMP--------------------------------------");
                 Thread.dumpStack();
                 System.out.println("----------------------------------------------------------------------");
+                throw new IllegalStateException();
             }
 
             //Data does not exist yet
