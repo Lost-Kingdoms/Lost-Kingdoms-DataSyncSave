@@ -52,6 +52,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
     @Nullable
     public T get() {
         if (!doesExist) return null;
+        System.out.println("TEST1 " + getDataKey().getRedisKey() + "   " + doesExist);
 
         // If data is up-to-date
         int hashslot = getDataKey().getHashslot();
@@ -69,11 +70,13 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 
             // Check if data is null
             if (dataString != null) {
+                System.out.println("TEST2 " + getDataKey().getRedisKey() + "   " + dataString);
                 //Convert the data
                 T newData = converter.convertFromDatabase(dataString);
 
                 //Conversion failed
                 if (newData == null) {
+                    System.out.println("TEST3 " + getDataKey().getRedisKey() + "   " + dataString);
                     doesExist = false;
                     return null;
                 }
@@ -84,6 +87,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
                 //Update timestamp to indicate when data was last updated
                 updateTimestamp(newTimestamp);
 
+                System.out.println("TEST4 " + getDataKey().getRedisKey() + "   " + newData);
                 return getData();
             }
 
