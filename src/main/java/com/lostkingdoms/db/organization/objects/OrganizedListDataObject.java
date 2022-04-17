@@ -125,6 +125,13 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 }
             }
 
+            if (getDataKey().getRedisKey().contains("point") || getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("region")) {
+                System.out.println("TEST LIST: " + getDataKey().getRedisKey() + "  " + doesExist + "  " + getData() );
+                System.out.println("--------------------------------DUMP--------------------------------------");
+                Thread.dumpStack();
+                System.out.println("----------------------------------------------------------------------");
+            }
+
             //Data does not exist yet
             doesExist = false;
             return new ArrayList<>();
