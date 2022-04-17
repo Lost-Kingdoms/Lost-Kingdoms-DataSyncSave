@@ -131,8 +131,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 System.out.println("TEST LIST: " + getDataKey().getRedisKey() + "  " + doesExist + "  " + getData() );
                 System.out.println("--------------------------------DUMP--------------------------------------");
                 Thread.dumpStack();
-                System.out.println("----------------------------------------------------------------------");
-                throw new IllegalStateException();
             }
             return new ArrayList<>();
         }

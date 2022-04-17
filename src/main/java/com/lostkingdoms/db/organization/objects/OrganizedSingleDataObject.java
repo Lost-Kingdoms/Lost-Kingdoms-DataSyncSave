@@ -131,7 +131,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
                 System.out.println("--------------------------------DUMP--------------------------------------");
                 Thread.dumpStack();
                 System.out.println("----------------------------------------------------------------------");
-                throw new IllegalStateException();
             }
             return null;
         }

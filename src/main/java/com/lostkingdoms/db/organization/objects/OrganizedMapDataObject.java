@@ -134,7 +134,6 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                 System.out.println("--------------------------------DUMP--------------------------------------");
                 Thread.dumpStack();
                 System.out.println("----------------------------------------------------------------------");
-                throw new IllegalStateException();
             }
             return getData();
         }
