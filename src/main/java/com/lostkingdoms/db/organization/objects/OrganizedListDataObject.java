@@ -75,6 +75,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 
                 //Conversion failed
                 if (newData == null) {
+                    System.out.println("TEEEEEEEST1 " + getDataKey().getRedisKey() + "   " + newData + "  " + dataString);
                     return Collections.unmodifiableList(new ArrayList<>());
                 }
 
@@ -84,6 +85,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 //Update timestamp to indicate when data was last updated
                 updateTimestamp(newTimestamp);
 
+                System.out.println("TEEEEEEEST2 " + getDataKey().getRedisKey() + "   " + newData + "  " + dataString);
                 return Collections.unmodifiableList(getData());
             }
 
@@ -109,6 +111,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
 
                     //Conversion failed
                     if (newData == null) {
+                        System.out.println("TEEEEEEEST3 " + getDataKey().getRedisKey() + "   " + newData + "  " + dataString);
                         return Collections.unmodifiableList(new ArrayList<>());
                     }
 
@@ -121,19 +124,13 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                     //Push data to Redis
                     jedis.set(dataKey.getRedisKey(), dataString);
 
+                    System.out.println("TEEEEEEEST4 " + getDataKey().getRedisKey() + "   " + newData + "  " + dataString);
                     return Collections.unmodifiableList(getData());
                 }
             }
 
             //Data does not exist yet
             doesExist = false;
-            if (getDataKey().getRedisKey().contains("point") || getDataKey().getRedisKey().contains("polygon")) {
-                System.out.println("TEST LIST: " + getDataKey().getRedisKey() + "  " + doesExist + "  " + getData() );
-                System.out.println("--------------------------------DUMP--------------------------------------");
-                Thread.dumpStack();
-                System.out.println("--------------------------------DUMP--------------------------------------");
-                throw new IllegalStateException("TEST");
-            }
             return new ArrayList<>();
         }
     }

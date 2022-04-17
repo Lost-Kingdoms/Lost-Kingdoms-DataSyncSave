@@ -126,13 +126,6 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
             }
 
             doesExist = false;
-            if (getDataKey().getRedisKey().contains("point") || getDataKey().getRedisKey().contains("polygon")) {
-                System.out.println("TEST SINGLE: " + getDataKey().getRedisKey() + "  " + doesExist + "  " + getData() );
-                System.out.println("--------------------------------DUMP--------------------------------------");
-                Thread.dumpStack();
-                System.out.println("----------------------------------------------------------------------");
-                throw new IllegalStateException("TEST");
-            }
             return null;
         }
     }
