@@ -119,7 +119,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                     updateTimestamp(newTimestamp);
 
                     //Push data to Redis
-                    jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+                    jedis.set(dataKey.getRedisKey(), dataString);
 
                     return Collections.unmodifiableList(getData());
                 }

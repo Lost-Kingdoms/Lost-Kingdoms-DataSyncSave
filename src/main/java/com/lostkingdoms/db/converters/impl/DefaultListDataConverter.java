@@ -54,7 +54,6 @@ public class DefaultListDataConverter<T> {
 		}
 
 		ArrayList<T> newList = new ArrayList<>();
-
 		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
 			if (obj != null) {
 				for (String o : ((List<String>) obj)) {
@@ -63,7 +62,7 @@ public class DefaultListDataConverter<T> {
 					AbstractDataConverter<?> converter = null;
 					if (sub.length != 1) {
 						try {
-							converter = dataOrganizationManager.getDataConverter(Class.forName(sub[1]));
+							converter = dataOrganizationManager.getDataConverter(Class.forName(sub[sub.length-1]));
 						} catch (ClassNotFoundException e) {
 							e.printStackTrace();
 						}
@@ -71,7 +70,12 @@ public class DefaultListDataConverter<T> {
 						converter = dataOrganizationManager.getDataConverter(this.genericClass);
 					}
 
-					newList.add((T) converter.convertFromDatabase(sub[0]));
+					//TODO Remove on new version
+					if (this.genericClass.getSimpleName().toUpperCase().contains("LOCATION")) {
+						newList.add((T) converter.convertFromDatabase(String.join(":", sub)));
+					} else {
+						newList.add((T) converter.convertFromDatabase(sub[0]));
+					}
 				}
 			}
 		}

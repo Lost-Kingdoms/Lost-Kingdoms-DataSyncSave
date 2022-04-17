@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mongodb.*;
-import org.bson.types.ObjectId;
 
 import com.lostkingdoms.db.DataOrganizationManager;
 import com.lostkingdoms.db.converters.impl.DefaultMapDataConverter;
@@ -122,7 +121,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                     updateTimestamp(newTimestamp);
 
                     //Push data to Redis
-                    jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+                    jedis.set(dataKey.getRedisKey(), dataString);
 
                     return Collections.unmodifiableMap(getData());
                 }
@@ -429,7 +428,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                     while (true) {
                         try {
                             BasicDBObject query = new BasicDBObject();
-                            query.put(IDENTIFIER, new ObjectId(dataKey.getMongoDBIdentifier()));
+                            query.put(IDENTIFIER, dataKey.getMongoDBIdentifier());
 
                             BasicDBObject newDoc = new BasicDBObject();
                             newDoc.put(dataKey.getMongoDBValue(), "");

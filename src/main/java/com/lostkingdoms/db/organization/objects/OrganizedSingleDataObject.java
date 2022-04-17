@@ -8,7 +8,6 @@ import com.lostkingdoms.db.organization.enums.OrganizationType;
 import com.lostkingdoms.db.organization.miscellaneous.DataKey;
 import com.mongodb.*;
 
-import org.bson.types.ObjectId;
 import redis.clients.jedis.Jedis;
 
 import javax.annotation.Nullable;
@@ -120,7 +119,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
                     updateTimestamp(newTimestamp);
 
                     //Push data to Redis
-                    jedis.set(dataKey.getRedisKey(), converter.convertToDatabase(getData()));
+                    jedis.set(dataKey.getRedisKey(), dataString);
 
                     return getData();
                 }
