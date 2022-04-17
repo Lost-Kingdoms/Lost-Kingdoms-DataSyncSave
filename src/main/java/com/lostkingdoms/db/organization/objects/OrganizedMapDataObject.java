@@ -127,6 +127,8 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                 }
             }
 
+            //Data does not exist yet
+            doesExist = false;
             if (getDataKey().getRedisKey().contains("point") || getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("region")) {
                 System.out.println("TEST MAP: " + getDataKey().getRedisKey() + "  " + doesExist + "  " + getData() );
                 System.out.println("--------------------------------DUMP--------------------------------------");
@@ -134,9 +136,6 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                 System.out.println("----------------------------------------------------------------------");
                 throw new IllegalStateException();
             }
-
-            //Data does not exist yet
-            doesExist = false;
             return getData();
         }
     }

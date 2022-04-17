@@ -125,6 +125,8 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 }
             }
 
+            //Data does not exist yet
+            doesExist = false;
             if (getDataKey().getRedisKey().contains("point") || getDataKey().getRedisKey().contains("polygon") || getDataKey().getRedisKey().contains("region")) {
                 System.out.println("TEST LIST: " + getDataKey().getRedisKey() + "  " + doesExist + "  " + getData() );
                 System.out.println("--------------------------------DUMP--------------------------------------");
@@ -132,9 +134,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 System.out.println("----------------------------------------------------------------------");
                 throw new IllegalStateException();
             }
-
-            //Data does not exist yet
-            doesExist = false;
             return new ArrayList<>();
         }
     }
