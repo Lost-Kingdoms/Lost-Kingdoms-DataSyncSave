@@ -42,7 +42,7 @@ public class DefaultListDataConverter<T> {
 		//Convert object from json
 		Object obj = null;
 		
-
+		
 		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
 			obj = gson.fromJson(s, new TypeToken<ArrayList<String>>() {}.getType());
 		} else {
@@ -55,42 +55,26 @@ public class DefaultListDataConverter<T> {
 
 		ArrayList<T> newList = new ArrayList<>();
 
+		if(dataOrganizationManager.hasDataConverter(this.genericClass)) {
 			if (obj != null) {
-				boolean convert = true;
-				List<String> objList = ((List<String>) obj);
-				for (String o : objList) {
-					if(!convert)break;
+				for (String o : ((List<String>) obj)) {
 					String[] sub = o.split(":");
-					String toConvert = sub[0];
 
 					AbstractDataConverter<?> converter = null;
 					if (sub.length != 1) {
 						try {
-							String className = sub[sub.length-1];
-							Class dynClass = Class.forName(className);
-							if(dataOrganizationManager.hasDataConverter(dynClass)){
-								toConvert = o.substring(0, o.length()-className.length()-1);
-								converter = dataOrganizationManager.getDataConverter(dynClass);
-							}else if(dataOrganizationManager.hasDataConverter(this.genericClass)){
-								converter = dataOrganizationManager.getDataConverter(this.genericClass);
-							}
+							converter = dataOrganizationManager.getDataConverter(Class.forName(sub[1]));
 						} catch (ClassNotFoundException e) {
 							e.printStackTrace();
 						}
 					} else {
-						if(dataOrganizationManager.hasDataConverter(this.genericClass)){
-							converter = dataOrganizationManager.getDataConverter(this.genericClass);
-						}
+						converter = dataOrganizationManager.getDataConverter(this.genericClass);
 					}
-					if(converter==null){
-						convert=false;
-					}else{
-						newList.add((T) converter.convertFromDatabase(toConvert));
-					}
+
+					newList.add((T) converter.convertFromDatabase(sub[0]));
 				}
 			}
-
-
+		}
 
 		if(!newList.isEmpty()) return newList;
 		return (ArrayList<T>) obj;

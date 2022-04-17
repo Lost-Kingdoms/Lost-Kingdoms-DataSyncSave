@@ -46,14 +46,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
         //new Thread(this::getList).start();
     }
 
-
     /**
      * Get the {@link List}
      *
      * @return An unmodifiable instance of the {@link List}
      */
     public List<T> getList() {
-
         if (!doesExist) return new ArrayList<>();
 
         // If data is up-to-date
@@ -62,7 +60,6 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 || getOrganizationType() == OrganizationType.NONE) {
             return Collections.unmodifiableList(getData());
         }
-
 
         try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
             long newTimestamp = System.currentTimeMillis() - 1;
