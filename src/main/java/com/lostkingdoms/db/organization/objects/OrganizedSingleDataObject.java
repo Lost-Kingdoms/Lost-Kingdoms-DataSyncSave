@@ -74,6 +74,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 
                 //Conversion failed
                 if (newData == null) {
+                    doesExist = false;
                     return null;
                 }
 
@@ -109,6 +110,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
 
                     //Conversion failed
                     if (newData == null) {
+                        doesExist = false;
                         return null;
                     }
 

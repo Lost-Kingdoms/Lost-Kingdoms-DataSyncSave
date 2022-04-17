@@ -77,6 +77,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 
                 //Conversion failed
                 if (newData == null) {
+                    doesExist = false;
                     return Collections.unmodifiableMap(new HashMap<>());
                 }
 
@@ -111,6 +112,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
 
                     //Conversion failed
                     if (newData == null) {
+                        doesExist = false;
                         return Collections.unmodifiableMap(new HashMap<>());
                     }
 
