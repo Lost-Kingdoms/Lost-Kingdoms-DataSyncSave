@@ -223,12 +223,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @param element The element that will be added to {@link List}
      */
     public void add(T element) {
-        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
             setData(new ArrayList<>(getList()));
         }
+        doesExist = true;
 
         //Updated list (clone)
         @SuppressWarnings("unchecked")
@@ -313,12 +313,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @param element The element that will be removed from {@link List}
      */
     public void remove(T element) {
-        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
             setData(new ArrayList<>(getList()));
         }
+        doesExist = true;
 
         //Updated list (clone)
         @SuppressWarnings("unchecked")
@@ -483,12 +483,12 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
      * @param element element to be stored at the specified position
      */
     public void set(int i, T element) {
-        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
             setData(new ArrayList<>(getList()));
         }
+        doesExist = true;
 
         //Updated list (clone)
         @SuppressWarnings("unchecked")

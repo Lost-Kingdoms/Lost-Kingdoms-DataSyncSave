@@ -72,7 +72,7 @@ public class DefaultListDataConverter<T> {
 
 					//TODO Remove on new version
 					if (this.genericClass.getSimpleName().toUpperCase().contains("LOCATION")) {
-						newList.add((T) converter.convertFromDatabase(String.join(":", sub)));
+						newList.add((T) converter.convertFromDatabase("" + sub[0] + ":" + sub[1] + ":" + sub[2] + ":" + sub[3]));
 					} else {
 						newList.add((T) converter.convertFromDatabase(sub[0]));
 					}
@@ -99,19 +99,7 @@ public class DefaultListDataConverter<T> {
 			for(T o : t) {
 				AbstractDataConverter<?> converter = dataOrganizationManager.getDataConverter(o.getClass());
 
-				Class<?> clazz = o.getClass();
-				boolean superList = false;
-				while(clazz.getSuperclass() != null) {
-					if(clazz.getSuperclass() == this.genericClass) {
-						superList = true;
-					}
-					clazz = clazz.getSuperclass();
-				}
-				if(superList) {
-					newList.add(converter.convertToDatabase(o) + ":" + o.getClass().getName());
-				} else {
-					newList.add(converter.convertToDatabase(o));
-				}	
+				newList.add(converter.convertToDatabase(o) + ":" + o.getClass().getName());
 			}
 
 			data = newList;

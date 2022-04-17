@@ -220,12 +220,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @param value value to be associated with the specified key
      */
     public void put(K key, V value) {
-        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
             setData(new HashMap<K, V>(getMap()));
         }
+        doesExist = true;
 
         //Updated list (clone)
         @SuppressWarnings("unchecked")
@@ -311,12 +311,12 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
      * @param key key whose mapping is to be removed from the map
      */
     public void remove(K key) {
-        doesExist = true;
         int hashslot = getDataKey().getHashslot();
 
         if (DataOrganizationManager.getInstance().getLastUpdated(hashslot) < getTimestamp() || getTimestamp() == 0) {
             setData(new HashMap<>(getMap()));
         }
+        doesExist = true;
 
         //Updated list (clone)
         @SuppressWarnings("unchecked")
