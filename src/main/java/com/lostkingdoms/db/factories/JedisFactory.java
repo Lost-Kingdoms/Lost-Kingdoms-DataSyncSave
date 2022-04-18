@@ -31,13 +31,11 @@ public final class JedisFactory {
 	 */
     private JedisFactory() {
         JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxWaitMillis(50);
 
         jedisPool = new JedisPool(
                 poolConfig,
                 "127.0.0.1",
-                6379,
-                50
+                6379
             );
     }
 

@@ -147,7 +147,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
         //Update the timestamp for last change
         updateTimestamp(newTimestamp);
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                 //Get the data key
                 DataKey dataKey = getDataKey();
@@ -209,7 +209,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(map);
@@ -240,7 +240,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
         //Update the timestamp for last change
         updateTimestamp(newTimestamp);
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                 //Get the data key
                 DataKey dataKey = getDataKey();
@@ -301,7 +301,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(temp);
@@ -336,7 +336,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
             //Update the timestamp for last change
             updateTimestamp(newTimestamp);
 
-            new Thread(() -> {
+            //new Thread(() -> {
                 try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                     //Get the data key
                     DataKey dataKey = getDataKey();
@@ -397,7 +397,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                     //Publish to other servers via redis
                     sendSyncMessage(jedis);
                 }
-            }).start();
+            //}).start();
 
             //Set the local data
             setData(temp);
@@ -414,7 +414,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
         //Update the timestamp for last change
         updateTimestamp(newTimestamp);
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                 //Get the data key
                 DataKey dataKey = getDataKey();
@@ -449,7 +449,7 @@ public final class OrganizedMapDataObject<K, V> extends OrganizedDataObject<Hash
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(new HashMap<>());

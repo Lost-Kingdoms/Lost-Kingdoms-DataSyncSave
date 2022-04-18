@@ -151,7 +151,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
         //Update the timestamp for last change
         updateTimestamp(newTimestamp);
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 
                 //Get the data key
@@ -213,7 +213,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(list);
@@ -242,7 +242,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
         //Update the timestamp for last change
         updateTimestamp(newTimestamp);
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                 //Get the data key
                 DataKey dataKey = getDataKey();
@@ -303,7 +303,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(temp);
@@ -338,7 +338,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
             //Update the timestamp for last change
             updateTimestamp(newTimestamp);
 
-            new Thread(() -> {
+            //new Thread(() -> {
                 try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                     //Get the data key
                     DataKey dataKey = getDataKey();
@@ -399,7 +399,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                     //Publish to other servers via redis
                     sendSyncMessage(jedis);
                 }
-            }).start();
+            //}).start();
 
             //Set the local data
             setData(temp);
@@ -416,7 +416,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
         //Update the timestamp for last change
         updateTimestamp(newTimestamp);
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                 //Get the data key
                 DataKey dataKey = getDataKey();
@@ -451,7 +451,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(new ArrayList<T>());
@@ -502,7 +502,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
             return;
         }
 
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
                 long newTimestamp = System.currentTimeMillis() - 1;
 
@@ -568,7 +568,7 @@ public final class OrganizedListDataObject<T> extends OrganizedDataObject<ArrayL
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         //Set the local data
         setData(temp);

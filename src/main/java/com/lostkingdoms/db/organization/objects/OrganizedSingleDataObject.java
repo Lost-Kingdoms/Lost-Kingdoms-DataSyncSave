@@ -146,7 +146,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
         updateTimestamp(newTimestamp);
 
         // Send to Cache and DB
-        new Thread(() -> {
+        //new Thread(() -> {
             try (Jedis jedis = JedisFactory.getInstance().getJedis()) {
 
                 //Get the data key
@@ -220,7 +220,7 @@ public final class OrganizedSingleDataObject<T> extends OrganizedDataObject<T> {
                 //Publish to other servers via redis
                 sendSyncMessage(jedis);
             }
-        }).start();
+        //}).start();
 
         if (data == null) {
             doesExist = false;
